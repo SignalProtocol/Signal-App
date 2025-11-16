@@ -2,156 +2,185 @@
 
 import React, { useState } from "react";
 import ModalClose from "../ModalCloseButton.tsx/ModalClose";
+import axios from "axios";
+import { useWallet } from "@solana/wallet-adapter-react";
 
 interface RiskQuestionsModalProps {
   isOpen: boolean;
   onClose: () => void;
+  riskScore: number | null;
   setRiskScore: React.Dispatch<React.SetStateAction<number | null>>;
+  setShowRiskResultModal: React.Dispatch<React.SetStateAction<boolean>>;
+  walletAddress: string | null;
 }
 
 const RiskQuestionsModal: React.FC<RiskQuestionsModalProps> = ({
   isOpen,
   onClose,
+  riskScore,
   setRiskScore,
+  setShowRiskResultModal,
+  walletAddress,
 }) => {
+    const { connected } = useWallet();
+
   const [showInstructions, setShowInstructions] = useState(true);
   const [currentQuestion, setCurrentQuestion] = useState(1);
   const [selectedOptions, setSelectedOptions] = useState<{ [key: number]: number }>({});
 
-  const instructions = {
-    title: "Instructions",
-    question:
-      "Please answer the following questions to determine your risk profile. There are no right or wrong answers this is about understanding your comfort level with crypto market volatility and trading risk.",
-  };
+const instructions = {
+  title: "Instructions",
+  question:
+    "Please answer the following questions to determine your risk profile. There are no right or wrong answers this is about understanding your comfort level with crypto market volatility and trading risk.",
+};
 
 const Questions = [
-              {
-                title: "Investment Time Horizon",
-                question:
-                  "How long do you intend to hold your cryptocurrency investments before you need to access the funds?",
-                options: [
-                  { option: "Less than 1 year (0-12 months)", score: 10 },
-                  { option: "1 to 3 years", score: 20 },
-                  { option: "3 to 5 years", score: 30 },
-                  { option: "5 to 10 years", score: 40 },
-                  { option: "10+ years (long-term, no planned withdrawals)", score: 50 },
-                ],
-              },
-              {
-                title: "Leverage Comfort & Portfolio Composition",
-                question:
-                  "When considering crypto trading with leverage (futures, margin trading), what's your comfort level?",
-                options: [
-                  { option: "I only trade spot markets with 1x leverage; no margin or futures", score: 5 },
-                  { option: "I'm comfortable with up to 2-3x leverage on a small portion of my portfolio", score: 15 },
-                  { option: "I can accept 5-10x leverage on select positions", score: 30 },
-                  { option: "I actively trade with 10-25x leverage", score: 45 },
-                  { option: "I'm comfortable trading at 25x-100x+ leverage; I understand forced liquidations", score: 50 },
-                ],
-              },
-              {
-                title: "Volatility Tolerance & Emotional Response",
-                question:
-                  "Imagine your crypto portfolio drops 40% in value in a single week. What would you do?",
-                options: [
-                  { option: "I'd panic and sell everything; I can't handle that level of loss", score: 5 },
-                  { option: "I'd be stressed but hold; I'd consider this a buying opportunity if the project is solid", score: 25 },
-                  { option: "I'd view it as normal market correction and rebalance strategically", score: 40 },
-                  { option: "I'd see it as an opportunity to add leverage or double down on undervalued positions", score: 55 },
-                  { option: "I'd be excited about the volatility and use it for active trading profits", score: 70 },
-                ],
-              },
-              {
-                title: "Downside Risk Capacity & Emergency Funds",
-                question:
-                  "What percentage of your total liquid net worth is allocated to crypto investments?",
-                options: [
-                  { option: "Less than 5% (crypto is highly speculative for me)", score: 15 },
-                  { option: "5-15% (moderate allocation, I have substantial emergency reserves)", score: 30 },
-                  { option: "15-30% (significant portion, but I maintain 6+ months of expenses in stable assets)", score: 45 },
-                  { option: "30-50% (major portfolio allocation, limited emergency reserves)", score: 60 },
-                  { option: "50%+ (majority of investments in crypto, minimal safety net)", score: 75 },
-                ],
-              },
-              {
-                title: "Knowledge & Experience in Crypto Markets",
-                question: "How would you describe your cryptocurrency and trading knowledge?",
-                options: [
-                  { option: "Beginner; I've just started learning about crypto", score: 10 },
-                  { option: "Basic; I understand Bitcoin, altcoins, and spot trading fundamentals", score: 25 },
-                  { option: "Intermediate; I understand technical analysis, DeFi, and basic leverage trading", score: 40 },
-                  { option: "Advanced; I understand smart contracts, liquidation mechanics, and complex trading strategies", score: 55 },
-                  { option: "Expert; I have 3+ years of active crypto trading experience with significant profitability", score: 70 },
-                ],
-              },
-              {
-                title: "Regulatory & Operational Risk Acceptance",
-                question:
-                  "How would a regulatory crackdown (exchange bans, trading restrictions) affect your portfolio and strategy?",
-                options: [
-                  { option: "I need immediate access to my funds; any regulatory risk makes me uncomfortable", score: 20 },
-                  { option: "I can handle short-term access delays, but need my funds within 30 days", score: 35 },
-                  { option: "I can accept 1-3 month fund access restrictions for a strong project", score: 50 },
-                  { option: "I can accept temporary exchange issues or regulatory challenges", score: 65 },
-                  { option: "Regulatory risk is irrelevant to my investment thesis; I accept indefinite access limitations", score: 80 },
-                ],
-              },
-              {
-                title: "Portfolio Concentration & Diversification Comfort",
-                question:
-                  "What's your comfort level with concentrated positions in your crypto portfolio?",
-                options: [
-                  { option: "I prefer 80%+ in Bitcoin/Ethereum (established coins only)", score: 50 },
-                  { option: "50% large-cap (BTC/ETH), 50% mid-cap altcoins", score: 40 },
-                  { option: "Balanced mix: 30% large-cap, 40% mid-cap, 30% small-cap/emerging tokens", score: 30 },
-                  { option: "20% large-cap, 30% mid-cap, 50% small-cap/emerging/high-risk tokens", score: 20 },
-                  { option: "I'm comfortable with 70%+ portfolio concentration in single tokens; I like asymmetric bets", score: 10 },
-                ],
-              },
-              {
-                title: "Smart Contract & Cybersecurity Risk",
-                question:
-                  "How do you manage private keys and custody of your digital assets?",
-                options: [
-                  { option: "I use centralized exchange custody exclusively; I trust the platform", score: 60 },
-                  { option: "I use hardware wallets for long-term holdings, exchange for active trading", score: 45 },
-                  { option: "50% hardware wallet, 50% diversified across multiple exchanges/protocols", score: 30 },
-                  { option: "Mostly hardware/self-custody, but I interact with DeFi protocols (lending, staking)", score: 20 },
-                  { option: "Active DeFi participant; I accept smart contract risks; I understand impermanent loss concepts", score: 10 },
-                ],
-              },
-              {
-                title: "Trading Strategy & Leverage Exit Risk",
-                question:
-                  "If you're liquidated on a leveraged position, how would that impact your financial situation?",
-                options: [
-                  { option: "A liquidation would be catastrophic; I cannot afford losses beyond 10% of my crypto allocation", score: 65 },
-                  { option: "A single liquidation would hurt but manageable; I can afford 20-30% loss on my crypto portfolio", score: 50 },
-                  { option: "I can absorb 50% losses on my crypto allocation without affecting my lifestyle", score: 35 },
-                  { option: "I can absorb 70%+ losses; I view them as part of aggressive trading", score: 20 },
-                  { option: "Liquidations are expected; I rebalance and continue; losses don't affect my long-term strategy", score: 10 },
-                ],
-              },
-              {
-                title: "Income Replacement & Risk-Return Trade-off",
-                question: "What's your primary goal with crypto investments?",
-                options: [
-                  { option: "Capital preservation; I want slow, steady growth with minimal volatility", score: 20 },
-                  { option: "Moderate growth; I'm willing to accept some volatility for 15-30% annual returns", score: 35 },
-                  { option: "Strong growth; I target 50-100% annual returns; I accept significant volatility", score: 50 },
-                  { option: "Aggressive returns; I target 100-500% returns; I accept extreme volatility", score: 65 },
-                  { option: "Wealth multiplication; I'm chasing 10x+ returns; I'm willing to lose it all for asymmetric upside", score: 80 },
-                ],
-              },
-            ];
+  {
+    title: "Investment Time Horizon",
+    question:
+      "How long do you intend to hold your cryptocurrency investments before you need to access the funds?",
+    options: [
+      { option: "Less than 1 year (0-12 months)", score: 10 },
+      { option: "1 to 3 years", score: 20 },
+      { option: "3 to 5 years", score: 30 },
+      { option: "5 to 10 years", score: 40 },
+      { option: "10+ years (long-term, no planned withdrawals)", score: 50 },
+    ],
+  },
+  {
+    title: "Leverage Comfort & Portfolio Composition",
+    question:
+      "When considering crypto trading with leverage (futures, margin trading), what's your comfort level?",
+    options: [
+      { option: "I only trade spot markets with 1x leverage; no margin or futures", score: 5 },
+      { option: "I'm comfortable with up to 2-3x leverage on a small portion of my portfolio", score: 15 },
+      { option: "I can accept 5-10x leverage on select positions", score: 30 },
+      { option: "I actively trade with 10-25x leverage", score: 45 },
+      { option: "I'm comfortable trading at 25x-100x+ leverage; I understand forced liquidations", score: 50 },
+    ],
+  },
+  {
+    title: "Volatility Tolerance & Emotional Response",
+    question:
+      "Imagine your crypto portfolio drops 40% in value in a single week. What would you do?",
+    options: [
+      { option: "I'd panic and sell everything; I can't handle that level of loss", score: 5 },
+      { option: "I'd be stressed but hold; I'd consider this a buying opportunity if the project is solid", score: 25 },
+      { option: "I'd view it as normal market correction and rebalance strategically", score: 40 },
+      { option: "I'd see it as an opportunity to add leverage or double down on undervalued positions", score: 55 },
+      { option: "I'd be excited about the volatility and use it for active trading profits", score: 70 },
+    ],
+  },
+  {
+    title: "Downside Risk Capacity & Emergency Funds",
+    question:
+      "What percentage of your total liquid net worth is allocated to crypto investments?",
+    options: [
+      { option: "Less than 5% (crypto is highly speculative for me)", score: 15 },
+      { option: "5-15% (moderate allocation, I have substantial emergency reserves)", score: 30 },
+      { option: "15-30% (significant portion, but I maintain 6+ months of expenses in stable assets)", score: 45 },
+      { option: "30-50% (major portfolio allocation, limited emergency reserves)", score: 60 },
+      { option: "50%+ (majority of investments in crypto, minimal safety net)", score: 75 },
+    ],
+  },
+  {
+    title: "Knowledge & Experience in Crypto Markets",
+    question: "How would you describe your cryptocurrency and trading knowledge?",
+    options: [
+      { option: "Beginner; I've just started learning about crypto", score: 10 },
+      { option: "Basic; I understand Bitcoin, altcoins, and spot trading fundamentals", score: 25 },
+      { option: "Intermediate; I understand technical analysis, DeFi, and basic leverage trading", score: 40 },
+      { option: "Advanced; I understand smart contracts, liquidation mechanics, and complex trading strategies", score: 55 },
+      { option: "Expert; I have 3+ years of active crypto trading experience with significant profitability", score: 70 },
+    ],
+  },
+  {
+    title: "Regulatory & Operational Risk Acceptance",
+    question:
+      "How would a regulatory crackdown (exchange bans, trading restrictions) affect your portfolio and strategy?",
+    options: [
+      { option: "I need immediate access to my funds; any regulatory risk makes me uncomfortable", score: 20 },
+      { option: "I can handle short-term access delays, but need my funds within 30 days", score: 35 },
+      { option: "I can accept 1-3 month fund access restrictions for a strong project", score: 50 },
+      { option: "I can accept temporary exchange issues or regulatory challenges", score: 65 },
+      { option: "Regulatory risk is irrelevant to my investment thesis; I accept indefinite access limitations", score: 80 },
+    ],
+  },
+  {
+    title: "Portfolio Concentration & Diversification Comfort",
+    question:
+      "What's your comfort level with concentrated positions in your crypto portfolio?",
+    options: [
+      { option: "I prefer 80%+ in Bitcoin/Ethereum (established coins only)", score: 50 },
+      { option: "50% large-cap (BTC/ETH), 50% mid-cap altcoins", score: 40 },
+      { option: "Balanced mix: 30% large-cap, 40% mid-cap, 30% small-cap/emerging tokens", score: 30 },
+      { option: "20% large-cap, 30% mid-cap, 50% small-cap/emerging/high-risk tokens", score: 20 },
+      { option: "I'm comfortable with 70%+ portfolio concentration in single tokens; I like asymmetric bets", score: 10 },
+    ],
+  },
+  {
+    title: "Smart Contract & Cybersecurity Risk",
+    question:
+      "How do you manage private keys and custody of your digital assets?",
+    options: [
+      { option: "I use centralized exchange custody exclusively; I trust the platform", score: 60 },
+      { option: "I use hardware wallets for long-term holdings, exchange for active trading", score: 45 },
+      { option: "50% hardware wallet, 50% diversified across multiple exchanges/protocols", score: 30 },
+      { option: "Mostly hardware/self-custody, but I interact with DeFi protocols (lending, staking)", score: 20 },
+      { option: "Active DeFi participant; I accept smart contract risks; I understand impermanent loss concepts", score: 10 },
+    ],
+  },
+  {
+    title: "Trading Strategy & Leverage Exit Risk",
+    question:
+      "If you're liquidated on a leveraged position, how would that impact your financial situation?",
+    options: [
+      { option: "A liquidation would be catastrophic; I cannot afford losses beyond 10% of my crypto allocation", score: 65 },
+      { option: "A single liquidation would hurt but manageable; I can afford 20-30% loss on my crypto portfolio", score: 50 },
+      { option: "I can absorb 50% losses on my crypto allocation without affecting my lifestyle", score: 35 },
+      { option: "I can absorb 70%+ losses; I view them as part of aggressive trading", score: 20 },
+      { option: "Liquidations are expected; I rebalance and continue; losses don't affect my long-term strategy", score: 10 },
+    ],
+  },
+  {
+    title: "Income Replacement & Risk-Return Trade-off",
+    question: "What's your primary goal with crypto investments?",
+    options: [
+      { option: "Capital preservation; I want slow, steady growth with minimal volatility", score: 20 },
+      { option: "Moderate growth; I'm willing to accept some volatility for 15-30% annual returns", score: 35 },
+      { option: "Strong growth; I target 50-100% annual returns; I accept significant volatility", score: 50 },
+      { option: "Aggressive returns; I target 100-500% returns; I accept extreme volatility", score: 65 },
+      { option: "Wealth multiplication; I'm chasing 10x+ returns; I'm willing to lose it all for asymmetric upside", score: 80 },
+    ],
+  },
+];
 
   const addAllRiskScores = () => {
     const totalScore = Object.values(selectedOptions).reduce((acc, score) => acc + score, 0);
     setRiskScore(totalScore);
     onClose();
+    setShowRiskResultModal(true);
+    createUserAPICall();
   };
 
+  const createUserAPICall = async () => {
+    const payload = {
+      wallet_address: walletAddress,
+      risk_score: riskScore
+    }
+  try {
+    const response = await axios.post(
+      "https://signal-pipeline.up.railway.app/setuserprofile",
+      payload
+    );
+  } catch (error) {
+    console.error("Error fetching user profile:", error);
+  }
+};
+
   if (!isOpen) return null;
+
+  if (!connected) return null;
 
   return (
     <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">

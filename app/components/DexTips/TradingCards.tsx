@@ -13,6 +13,8 @@ interface Card {
   holding: string;
   long: boolean;
   short: boolean;
+  instrument: string;
+  positionSize: string;
 }
 
 interface TradingCardsProps {
@@ -115,8 +117,10 @@ const TradingCards: React.FC<TradingCardsProps> = ({
                         {card.token.split(".")[0].slice(0, 2)}
                       </span>
                     </div>
-                    <div>                      
-                      <p className="font-bold text-base text-white">{card.token}</p>
+                    <div>
+                      <p className="font-bold text-base text-white">
+                        {card.token}
+                      </p>
                       <p className="text-[9px] text-yellow-300 drop-shadow-[0_0_8px_rgba(34,197,94,0.6)] uppercase tracking-wide">
                         {card.leverage} Leverage
                       </p>
@@ -164,7 +168,7 @@ const TradingCards: React.FC<TradingCardsProps> = ({
                       SHORT
                     </div>
                   )}
-                  <div className="flex items-center justify-center gap-1.5 text-[10px] text-gray-400 pt-1 bg-[#1a1a1f]/40 rounded-md py-1.5">
+                  {/* <div className="flex items-center justify-center gap-1.5 text-[10px] text-gray-400 pt-1 bg-[#1a1a1f]/40 rounded-md py-1.5">
                     <svg
                       className="w-3 h-3"
                       fill="none"
@@ -179,46 +183,88 @@ const TradingCards: React.FC<TradingCardsProps> = ({
                       />
                     </svg>
                     <span>{card.holding}</span>
+                  </div> */}
+                  <div>
+                    <div className="flex items-center text-[11px] justify-end  mb-1">
+                      <h1>
+                        <b className="font-semibold">INSTRUMENT</b>
+                      </h1>
+                      : {card.instrument}
+                    </div>
+                    <div className="flex items-center text-[11px] justify-end ">
+                      <h1>
+                        <b className="font-semibold">POSITION SIZE in %</b>
+                      </h1>
+                      : {card.positionSize}
+                    </div>
                   </div>
                 </div>
 
                 {/* Card Content - Blurred if locked, clear if unlocked */}
-                <div className={`space-y-2 text-xs transition-all duration-300`}>
+                <div
+                  className={`space-y-2 text-xs transition-all duration-300`}
+                >
                   {/* Entry Zone */}
                   <div className="bg-[#1a1a1f]/60 rounded-md p-2 border border-[#2a2a33]">
                     <div className="flex items-center justify-between">
                       <span className="text-gray-400 text-[10px] uppercase tracking-wider font-medium">
                         Entry
                       </span>
-                      <span className="text-white font-semibold text-xs">{card.entry}</span>
+                      <span className="text-white font-semibold text-xs">
+                        {card.entry}
+                      </span>
                     </div>
                   </div>
 
                   {/* Take Profits & Stop Loss Grid */}
                   <div className="grid grid-cols-2 gap-1.5">
                     <div className="flex items-center justify-between bg-green-500/5 rounded-sm p-1.5 border border-green-500/20">
-                      <span className="text-gray-400 text-[10px] font-medium">TP1</span>
-                      <span className="text-green-400 font-semibold text-[10px]">{card.tp1}</span>
+                      <span className="text-gray-400 text-[10px] font-medium">
+                        TP1
+                      </span>
+                      <span className="text-green-400 font-semibold text-[10px]">
+                        {card.tp1}
+                      </span>
                     </div>
                     <div className="flex items-center justify-between bg-green-500/5 rounded-sm p-1.5 border border-green-500/20">
-                      <span className="text-gray-400 text-[10px] font-medium">TP2</span>
-                      <span className="text-green-400 font-semibold text-[10px]">{card.tp2}</span>
+                      <span className="text-gray-400 text-[10px] font-medium">
+                        TP2
+                      </span>
+                      <span className="text-green-400 font-semibold text-[10px]">
+                        {card.tp2}
+                      </span>
                     </div>
                     <div className="flex items-center justify-between bg-green-500/5 rounded-sm p-1.5 border border-green-500/20">
-                      <span className="text-gray-400 text-[10px] font-medium">TP3</span>
-                      <span className="text-green-400 font-semibold text-[10px]">{card.tp3}</span>
+                      <span className="text-gray-400 text-[10px] font-medium">
+                        TP3
+                      </span>
+                      <span className="text-green-400 font-semibold text-[10px]">
+                        {card.tp3}
+                      </span>
                     </div>
                     <div className="flex items-center justify-between bg-green-500/5 rounded-sm p-1.5 border border-green-500/20">
-                      <span className="text-gray-400 text-[10px] font-medium">TP4</span>
-                      <span className="text-green-400 font-semibold text-[10px]">{card.tp4}</span>
+                      <span className="text-gray-400 text-[10px] font-medium">
+                        TP4
+                      </span>
+                      <span className="text-green-400 font-semibold text-[10px]">
+                        {card.tp4}
+                      </span>
                     </div>
                     <div className="flex items-center justify-between bg-green-500/5 rounded-sm p-1.5 border border-green-500/20">
-                      <span className="text-gray-400 text-[10px] font-medium">TP5</span>
-                      <span className="text-green-400 font-semibold text-[10px]">{card.tp5}</span>
+                      <span className="text-gray-400 text-[10px] font-medium">
+                        TP5
+                      </span>
+                      <span className="text-green-400 font-semibold text-[10px]">
+                        {card.tp5}
+                      </span>
                     </div>
                     <div className="flex items-center justify-between bg-red-500/5 rounded-sm p-1.5 border border-red-500/20">
-                      <span className="text-gray-400 text-[10px] font-medium">SL</span>
-                      <span className="text-red-400 font-semibold text-[10px]">{card.sl}</span>
+                      <span className="text-gray-400 text-[10px] font-medium">
+                        SL
+                      </span>
+                      <span className="text-red-400 font-semibold text-[10px]">
+                        {card.sl}
+                      </span>
                     </div>
                   </div>
                 </div>

@@ -1,6 +1,5 @@
 "use client";
-import { useEffect, useState } from "react";
-import { WalletMultiButton } from "@solana/wallet-adapter-react-ui";
+import { useEffect, useState, useCallback } from "react";
 import PaymentModal from "./components/PaymentModal";
 import StatsOverview from "./components/Stats/StatsOverview";
 import TradingCards from "./components/DexTips/TradingCards";
@@ -9,15 +8,20 @@ import RiskResultModal from "./components/RiskQuestionsModal/RiskResultModal";
 import { useConnection, useWallet } from "@solana/wallet-adapter-react";
 import { getAccount, getAssociatedTokenAddress } from "@solana/spl-token";
 import { PublicKey } from "@solana/web3.js";
+import Header from "./components/DexHeader/Header";
+import axios from "axios";
 
 const Dashboard = () => {
+  const { connection } = useConnection();
+  const { publicKey } = useWallet();
   const [unlockedCards, setUnlockedCards] = useState<number[]>([]);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [selectedCard, setSelectedCard] = useState<number | null>(null);
-  const [showRiskQuestionModal, setShowRiskQuestionModal] = useState(false);
+  const [showRiskQuestionModal, setShowRiskQuestionModal] = useState(true);
   const [showRiskResultModal, setShowRiskResultModal] = useState(false);
-  const [riskScore, setRiskScore] = useState<number | null>(null);
+  const [riskScore, setRiskScore] = useState<number | null>(500);
   const [tokenBalance, setTokenBalance] = useState<number | null>(null);
+  const [walletAddress, setWalletAddress] = useState<string | null>(null);
 
   const handleUnlock = (index: number) => {
     setSelectedCard(index);
@@ -45,6 +49,8 @@ const Dashboard = () => {
       holding: "4 - 14 hours",
       long: true,
       short: false,
+      instrument: "future",
+      positionSize: "10",
     },
     {
       token: "BTC.USDT",
@@ -59,6 +65,8 @@ const Dashboard = () => {
       holding: "12 - 24 hours",
       long: false,
       short: true,
+      instrument: "future",
+      positionSize: "10",
     },
     {
       token: "ETH.USDT",
@@ -73,6 +81,8 @@ const Dashboard = () => {
       holding: "6 - 12 hours",
       long: true,
       short: false,
+      instrument: "future",
+      positionSize: "10",
     },
     {
       token: "ADA.USDT",
@@ -87,6 +97,8 @@ const Dashboard = () => {
       holding: "8 - 16 hours",
       long: true,
       short: false,
+      instrument: "future",
+      positionSize: "10",
     },
     {
       token: "XRP.USDT",
@@ -101,6 +113,8 @@ const Dashboard = () => {
       holding: "10 - 20 hours",
       long: true,
       short: false,
+      instrument: "future",
+      positionSize: "10",
     },
     {
       token: "SOL.USDT",
@@ -115,11 +129,10 @@ const Dashboard = () => {
       holding: "5 - 15 hours",
       long: true,
       short: false,
+      instrument: "future",
+      positionSize: "10",
     },
   ];
-
-  const { connection } = useConnection();
-  const { publicKey } = useWallet();
 
   const fetchTokenBalance = async () => {
     if (!publicKey || !connection) {
@@ -134,6 +147,7 @@ const Dashboard = () => {
         "EEMZhENRymuN2TViQC1ijSmuEk3XnC1unkog8fERp7Eh"
       );
       const ata = await getAssociatedTokenAddress(TOKEN_MINT, publicKey);
+      setWalletAddress(publicKey.toBase58());
 
       // fetch token account details
       const accountInfo = await getAccount(connection, ata);
@@ -148,43 +162,29 @@ const Dashboard = () => {
     fetchTokenBalance();
   }, [publicKey, connection]);
 
+  const getUserProfileAPICall = useCallback(async () => {
+    try {
+      const response = await axios.get(
+        `https://signal-pipeline.up.railway.app/getuserprofile?wallet_address=${walletAddress}`
+      );
+      const data = response.data;
+      if (data.unlockedCards && Array.isArray(data.unlockedCards)) {
+        setUnlockedCards(data.unlockedCards);
+      }
+    } catch (error) {
+      console.error("Error fetching user profile:", error);
+      setShowRiskQuestionModal(true)
+    }
+  }, [walletAddress]);
+
+  useEffect(() => {
+    getUserProfileAPICall();
+  }, [walletAddress]);
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-black via-[#0b0b0f] to-black text-white flex flex-col">
       {/* Top Bar */}
-      <header
-        className="flex items-center justify-between px-6 py-2 border-b border-[#1f1f25] bg-[#0e0e12]/80 backdrop-blur-xl shadow-lg"
-        style={{ zIndex: 100 }}
-      >
-        <div className="flex items-center gap-3">
-          <div className="relative w-9 h-9 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-lg shadow-[0_0_15px_rgba(99,102,241,0.5)]">
-            <div className="absolute inset-0.5 bg-gradient-to-br from-indigo-400 to-purple-500 rounded-lg"></div>
-            <div className="absolute inset-0 flex items-center justify-center">
-              <span className="text-white font-bold text-sm">TP</span>
-            </div>
-          </div>
-          <div>
-            <h1 className="text-xl font-bold tracking-wide bg-gradient-to-r from-indigo-400 to-purple-400 bg-clip-text text-transparent">
-              TradePulse
-            </h1>
-            <p className="text-[10px] text-gray-500 uppercase tracking-wider">
-              Signal Dashboard
-            </p>
-          </div>
-        </div>
-        <div className="flex items-center gap-4">
-          {tokenBalance && (
-            <div className="p-2 px-4 text-sm font-light rounded-full border-2 border-indigo-500/50 bg-[#1f1f25] transition-all duration-300">
-              Bal: <b>{tokenBalance} $SIGNAL</b>
-            </div>
-          )}
-
-          <div className="hidden md:flex items-center gap-2 px-1 py-1.5">
-            <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
-            <span className="text-xs text-gray-400">Live</span>
-          </div>
-          <WalletMultiButton style={{ height: "38px" }} />
-        </div>
-      </header>
+      <Header tokenBalance={tokenBalance} />
 
       <div className="flex flex-1">
         {/* Main Content */}
@@ -207,18 +207,23 @@ const Dashboard = () => {
         onClose={() => setShowPaymentModal(false)}
         onSuccess={handlePaymentSuccess}
         cardIndex={selectedCard ?? 0}
+        tokenBalance={tokenBalance}
+        walletAddress={walletAddress}
       />
 
       <RiskQuestionsModal
         isOpen={showRiskQuestionModal}
         onClose={() => setShowRiskQuestionModal(false)}
+        riskScore={riskScore}
         setRiskScore={setRiskScore}
+        setShowRiskResultModal={setShowRiskResultModal}
+        walletAddress={walletAddress}
       />
 
       <RiskResultModal
         isOpen={showRiskResultModal}
         onClose={() => setShowRiskResultModal(false)}
-        riskScore={500}
+        riskScore={riskScore}
       />
     </div>
   );

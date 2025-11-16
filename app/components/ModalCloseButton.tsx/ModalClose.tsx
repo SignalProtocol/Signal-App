@@ -4,7 +4,7 @@ const ModalClose: React.FC<{ onClose: () => void }> = ({ onClose }) => {
   return (
     <button
       onClick={onClose}
-      className="text-gray-400 hover:text-white transition-colors"
+      className="text-gray-400 hover:text-white transition-colors cursor-pointer"
     >
       <svg
         className="w-6 h-6"
