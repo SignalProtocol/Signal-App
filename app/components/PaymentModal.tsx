@@ -1,24 +1,24 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useConnection, useWallet } from "@solana/wallet-adapter-react";
-import { PublicKey, Transaction } from "@solana/web3.js";
+import {
+  PublicKey,
+  Transaction,
+  TransactionInstruction,
+} from "@solana/web3.js";
 import {
   getAssociatedTokenAddress,
-  createTransferInstruction,
+  createTransferCheckedInstruction,
   getAccount,
-  createAssociatedTokenAccountInstruction,
+  createAssociatedTokenAccountIdempotentInstruction,
 } from "@solana/spl-token";
 import axios from "axios";
 import ModalClose from "./ModalCloseButton.tsx/ModalClose";
 import { WalletMultiButton } from "@solana/wallet-adapter-react-ui";
 
-const RECIPIENT_WALLET = new PublicKey(
-  process.env.NEXT_PUBLIC_RECIPIENT_WALLET!
+const MEMO_PROGRAM_ID = new PublicKey(
+  "MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr"
 );
-const USDC_MINT_DEVNET = new PublicKey(
-  process.env.NEXT_PUBLIC_USDC_MINT_DEVNET!
-);
-const PAYMENT_AMOUNT = 100_000; // 0.1 USDC
 
 interface PaymentModalProps {
   isOpen: boolean;
@@ -26,7 +26,10 @@ interface PaymentModalProps {
   onSuccess: (message: string) => void;
   cardIndex: number;
   tokenBalance: number | null;
-  walletAddress: string | null;
+  txSignature: string;
+  setTxSignature: (signature: string) => void;
+  uuid?: string;
+  setUnlockedCards: (card: any) => void;
 }
 
 export default function PaymentModal({
@@ -35,15 +38,22 @@ export default function PaymentModal({
   onSuccess,
   cardIndex,
   tokenBalance,
-  walletAddress,
+  txSignature,
+  setTxSignature,
+  uuid,
+  setUnlockedCards
 }: PaymentModalProps) {
   const { connection } = useConnection();
   const { publicKey, signTransaction, connected } = useWallet();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string>("");
-  const [txSignature, setTxSignature] = useState<string>("");
-  const { connect } = useWallet();
+  const [success, setSuccess] = useState(false);
+  const [successMessage, setSuccessMessage] = useState<string>("");
+  const [tradingSignalData, setTradingSignalData] = useState<any>(null);
+  const [initialPaymentResponse, setInitiatePaymentResponse] =
+    useState<any>(null);
 
+  // Method inspired by index.ts sendPaymentWithSeed - adapted for browser wallet
   const handlePayAndGetMessage = async () => {
     if (!publicKey || !signTransaction) {
       setError("Please connect your wallet first");
@@ -55,54 +65,83 @@ export default function PaymentModal({
     setTxSignature("");
 
     try {
-      // Get associated token accounts
+      // Check SOL balance
+      // const lamports = await connection.getBalance(publicKey);
+
+      // Generate a unique reference for this payment (similar to invoice reference)
+      const reference = initialPaymentResponse?.reference;
+      const mintPk = new PublicKey(initialPaymentResponse?.payment_instruction?.usdc_mint);
+      const recipientPk = new PublicKey(initialPaymentResponse?.payment_instruction?.send_to);
+
+
       const senderATA = await getAssociatedTokenAddress(
-        USDC_MINT_DEVNET,
-        publicKey
+        mintPk,
+        publicKey,
+        true
       );
+
       const recipientATA = await getAssociatedTokenAddress(
-        USDC_MINT_DEVNET,
-        RECIPIENT_WALLET
+        mintPk,
+        recipientPk,
+        true
       );
 
       // Check if sender has USDC
       try {
         const senderTokenAccount = await getAccount(connection, senderATA);
-        if (Number(senderTokenAccount.amount) < PAYMENT_AMOUNT) {
+        const balance = Number(senderTokenAccount.amount);
+
+        if (balance < initialPaymentResponse?.payment_instruction?.amount_usdc) {
           throw new Error("Insufficient USDC balance");
         }
-      } catch (err) {
+      } catch (err: any) {
+        if (err.message.includes("Insufficient")) throw err;
         throw new Error(
           "You don't have a USDC account. Please get some devnet USDC first."
         );
       }
 
-      // Create transfer instruction. If recipient ATA doesn't exist, create it first.
-      const instructions = [] as any[];
+      // Build transaction instructions
+      const instructions: TransactionInstruction[] = [];
 
-      // If recipient ATA doesn't exist, create it (idempotent on devnet/mainnet if already exists)
+      // Check if recipient ATA exists, create it idempotently if needed
       try {
         await getAccount(connection, recipientATA);
       } catch (err) {
-        // Account doesn't exist; create associated token account for recipient
         instructions.push(
-          createAssociatedTokenAccountInstruction(
+          createAssociatedTokenAccountIdempotentInstruction(
             publicKey, // payer
             recipientATA,
-            RECIPIENT_WALLET,
-            USDC_MINT_DEVNET
+            recipientPk, // Use PublicKey object, not string
+            mintPk // Use PublicKey object, not string
           )
         );
       }
 
+      // Add transferChecked instruction (more robust than basic transfer)
+      const decimals = 6; // USDC decimals
+      const amountInSmallestUnit = Math.round(
+        initialPaymentResponse?.payment_instruction?.amount_usdc * Math.pow(10, decimals)
+      );
+      
       instructions.push(
-        createTransferInstruction(
+        createTransferCheckedInstruction(
           senderATA,
+          mintPk, // Use PublicKey object, not string
           recipientATA,
           publicKey,
-          PAYMENT_AMOUNT
+          amountInSmallestUnit,
+          decimals
         )
       );
+
+      // Add memo instruction with reference (similar to index.ts approach)
+      const memoIx = new TransactionInstruction({
+        keys: [],
+        programId: MEMO_PROGRAM_ID,
+        data: Buffer.from(reference, "utf8"),
+      });
+      instructions.push(memoIx);
 
       // Create and send transaction
       const { blockhash, lastValidBlockHeight } =
@@ -112,8 +151,9 @@ export default function PaymentModal({
       transaction.feePayer = publicKey;
 
       const signedTx = await signTransaction(transaction);
-      let signature: string;
-      signature = await connection.sendRawTransaction(signedTx.serialize());
+      const signature = await connection.sendRawTransaction(
+        signedTx.serialize()
+      );
 
       // Wait for confirmation
       await connection.confirmTransaction({
@@ -122,34 +162,16 @@ export default function PaymentModal({
         lastValidBlockHeight,
       });
 
+      await waitForFinalization(signature, 20000, 1200);
+
       setTxSignature(signature);
+      
+      // Longer delay to ensure transaction is fully indexed and payment can be verified
+      await new Promise((resolve) => setTimeout(resolve, 3000));
 
-      // Wait a bit for transaction to propagate
-      await new Promise((resolve) => setTimeout(resolve, 2000));
+      // Now make the final API call with the transaction signature
+      await makeFinalPaymentAPICall(signature);
 
-      // Now call the API with the payment proof
-      const paymentHeader = `solana:${RECIPIENT_WALLET.toString()}:${USDC_MINT_DEVNET.toString()}:${PAYMENT_AMOUNT}:${signature}:devnet`;
-
-      const response = await axios.post(
-        "/api/paid-message",
-        { cardIndex },
-        {
-          headers: {
-            "X-402-Payment": paymentHeader,
-          },
-          validateStatus: (status) => status < 500, // Don't throw on 4xx errors
-        }
-      );
-
-      if (response.status === 200) {
-        onSuccess(response.data.message);
-        setLoading(false);
-        setTimeout(() => {
-          onClose();
-        }, 1000);
-      } else {
-        throw new Error(response.data.message || "API call failed");
-      }
     } catch (err: any) {
       setLoading(false);
       setError(
@@ -161,6 +183,79 @@ export default function PaymentModal({
     }
   };
 
+  // Wait for transaction finalization (adapted from index.ts)
+  const waitForFinalization = async (
+    signature: string,
+    timeoutMs: number = 20000,
+    intervalMs: number = 1000
+  ) => {
+    const start = Date.now();
+    while (Date.now() - start < timeoutMs) {
+      const statusResponse = await connection.getSignatureStatuses([signature]);
+      const status = statusResponse?.value?.[0];
+
+      if (
+        status &&
+        (status.confirmationStatus === "finalized" ||
+          status.confirmations === null)
+      ) {
+        return true;
+      }
+
+      await new Promise((resolve) => setTimeout(resolve, intervalMs));
+    }
+    return false;
+  };
+
+  const initiatePayment = async () => {
+    setLoading(true);
+    if (!uuid) return;
+
+    try {
+      await axios.get(
+        `https://signal-pipeline.up.railway.app/signal/${uuid}?network=devnet`
+      );
+      
+    } catch (err) {
+      setInitiatePaymentResponse(err.response?.data);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  const makeFinalPaymentAPICall = async (signature: string) => {
+    try {
+      const response = await axios.get(
+        `https://signal-pipeline.up.railway.app/signal/${uuid}?network=devnet&reference=${initialPaymentResponse?.reference}&tx_sig=${signature}`
+      );
+      
+      // The response data is the trading signal itself, not wrapped in trading_signal
+      const tradingSignal = response.data;
+      
+      // Add the unlocked card to the array
+      setUnlockedCards((prev: any[]) => [...prev, tradingSignal]);
+      
+      // Format a message from the trading signal data
+      const message = `${tradingSignal.action} ${tradingSignal.pair} at ${tradingSignal.leverage} leverage`;
+      setLoading(false);
+      
+      // Call onSuccess but don't close modal
+      onSuccess(message);
+    } catch (err: any) {
+      console.error("❌ Error fetching trading signal:", err);
+      setError(
+        err.response?.data?.error || 
+        err.message || 
+        "Failed to fetch trading signal"
+      );
+      setLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    uuid && initiatePayment();
+  }, [uuid]); // Depend directly on uuid - simpler and more explicit
+
   if (!isOpen) return null;
 
   if (!connected) {
@@ -170,19 +265,46 @@ export default function PaymentModal({
           <div className="flex items-center justify-end mb-6">
             <ModalClose onClose={onClose} />
           </div>
-            <div className="space-y-4">
-            <h2 className="text-xl font-semibold text-white mb-4">Connect Your Wallet</h2>
+          <div className="space-y-4">
+            <h2 className="text-xl font-semibold text-white mb-4">
+              Connect Your Wallet
+            </h2>
             <p className="text-gray-300 text-sm mb-6">
               Connect your Solana wallet to unlock exclusive trading signals.
             </p>
             <WalletMultiButton className="!w-full !py-2 !px-6 !rounded-lg !font-semibold !transition-all !bg-gradient-to-r !from-indigo-600 !to-purple-600 hover:!from-indigo-700 hover:!to-purple-700 !shadow-[0_0_20px_rgba(99,102,241,0.4)] hover:!shadow-[0_0_30px_rgba(99,102,241,0.6)]">
               Connect Wallet
             </WalletMultiButton>
-            </div>
+          </div>
         </div>
       </div>
-    )
-  }  
+    );
+  }
+
+  if (loading) {
+    return (
+      <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+        <div className="bg-gradient-to-br from-[#141418] to-[#1a1a1f] border border-indigo-500/30 rounded-xl max-w-lg w-full p-6 shadow-[0_0_50px_rgba(99,102,241,0.3)]">
+          <div className="flex flex-col items-center justify-center py-12 text-gray-300">
+            <div className="relative mb-6">
+              <div className="w-16 h-16 border-4 border-indigo-500/30 border-t-indigo-500 rounded-full animate-spin"></div>
+              <div
+                className="absolute inset-0 w-16 h-16 border-4 border-transparent border-b-purple-500 rounded-full animate-spin"
+                style={{
+                  animationDirection: "reverse",
+                  animationDuration: "1s",
+                }}
+              ></div>
+            </div>
+            <h3 className="text-lg font-semibold mb-2">
+              {initialPaymentResponse?.payment_instruction?.amount_usdc ? "Processing the transaction." : "Setting up your transaction"}
+            </h3>
+            <p className="text-gray-400">{initialPaymentResponse?.payment_instruction?.amount_usdc ? "Please approve in your wallet." : "Please wait..."}</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
@@ -198,7 +320,7 @@ export default function PaymentModal({
 
             <div className="mb-6">
               <p className="text-gray-300 mb-4">
-                Pay <span className="text-indigo-400 font-bold">0.1 USDC</span>{" "}
+                Pay <span className="text-indigo-400 font-bold">{initialPaymentResponse?.payment_instruction?.amount_usdc}</span>{" "}
                 on Solana devnet to unlock this exclusive trading signal with
                 detailed entry points, take profit targets, and stop loss
                 levels.
@@ -224,7 +346,7 @@ export default function PaymentModal({
                       Payment Details:
                     </p>
                     <ul className="space-y-1 text-xs">
-                      <li>• Amount: 0.1 USDC</li>
+                      <li>• Amount: {initialPaymentResponse?.payment_instruction?.amount_usdc} USDC</li>
                       <li>• Network: Solana Devnet</li>
                       <li>• Instant verification via x402 protocol</li>
                     </ul>
@@ -234,7 +356,7 @@ export default function PaymentModal({
             </div>
 
             <button
-              onClick={handlePayAndGetMessage}
+              onClick={() => handlePayAndGetMessage()}
               disabled={!connected || loading}
               className={`w-full py-3 px-6 rounded-lg font-semibold text-white transition-all mb-4 ${
                 !connected || loading
@@ -246,7 +368,7 @@ export default function PaymentModal({
                 ? "Processing Payment..."
                 : !connected
                 ? "Connect Wallet First"
-                : "Pay 0.1 USDC & Unlock Signal"}
+                : `Pay ${initialPaymentResponse?.payment_instruction?.amount_usdc} USDC & Unlock Signal`}
             </button>
 
             {error && (

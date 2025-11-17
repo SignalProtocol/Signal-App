@@ -10,11 +10,12 @@ import { getAccount, getAssociatedTokenAddress } from "@solana/spl-token";
 import { PublicKey } from "@solana/web3.js";
 import Header from "./components/DexHeader/Header";
 import axios from "axios";
+import { WalletMultiButton } from "@solana/wallet-adapter-react-ui";
 
 const Dashboard = () => {
   const { connection } = useConnection();
-  const { publicKey } = useWallet();
-  const [unlockedCards, setUnlockedCards] = useState<number[]>([]);
+  const { publicKey, connected } = useWallet();
+  const [unlockedCards, setUnlockedCards] = useState<any[]>([]);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [selectedCard, setSelectedCard] = useState<number | null>(null);
   const [showRiskQuestionModal, setShowRiskQuestionModal] = useState(true);
@@ -22,117 +23,23 @@ const Dashboard = () => {
   const [riskScore, setRiskScore] = useState<number | null>(500);
   const [tokenBalance, setTokenBalance] = useState<number | null>(null);
   const [walletAddress, setWalletAddress] = useState<string | null>(null);
+  const [streamedSignals, setStreamedSignals] = useState<any[]>([]);
+  const [getUserProfileStatus, setGetUserProfileStatus] = useState<
+    number | null
+  >(null);
+  const [txSignature, setTxSignature] = useState<string>("");
+  const [getCardUUID, setGetCardUUID] = useState<string>("");
 
-  const handleUnlock = (index: number) => {
+  const handleUnlock = (index: number, uuid: "") => {
     setSelectedCard(index);
     setShowPaymentModal(true);
+    setGetCardUUID(uuid);
   };
 
   const handlePaymentSuccess = () => {
-    if (selectedCard !== null) {
-      setUnlockedCards((prev) => [...prev, selectedCard]);
-    }
+    // No need to add card here - PaymentModal already handles it via setUnlockedCards
     setShowPaymentModal(false);
   };
-
-  const cards = [
-    {
-      token: "SHIB.USDC",
-      entry: "$0.285 - $0.295",
-      tp1: "$0.520 (+28%)",
-      tp2: "$0.380 (+76%)",
-      tp3: "$0.345 (-26%)",
-      tp4: "$0.310 (-40%)",
-      tp5: "$0.290 (-2%)",
-      sl: "$0.21 (-26.3%)",
-      leverage: "50x",
-      holding: "4 - 14 hours",
-      long: true,
-      short: false,
-      instrument: "future",
-      positionSize: "10",
-    },
-    {
-      token: "BTC.USDT",
-      entry: "$65,500 - $66,200",
-      tp1: "$68,000 (+3%)",
-      tp2: "$70,000 (+6%)",
-      tp3: "$72,000 (+9%)",
-      tp4: "$0.310 (-40%)",
-      tp5: "$0.290 (-2%)",
-      sl: "$64,000 (-2%)",
-      leverage: "10x",
-      holding: "12 - 24 hours",
-      long: false,
-      short: true,
-      instrument: "future",
-      positionSize: "10",
-    },
-    {
-      token: "ETH.USDT",
-      entry: "$3,100 - $3,150",
-      tp1: "$3,400 (+9%)",
-      tp2: "$3,600 (+15%)",
-      tp3: "$3,800 (+22%)",
-      tp4: "$0.310 (-40%)",
-      tp5: "$0.290 (-2%)",
-      sl: "$3,000 (-4%)",
-      leverage: "20x",
-      holding: "6 - 12 hours",
-      long: true,
-      short: false,
-      instrument: "future",
-      positionSize: "10",
-    },
-    {
-      token: "ADA.USDT",
-      entry: "$1.20 - $1.25",
-      tp1: "$1.40 (+12%)",
-      tp2: "$1.55 (+24%)",
-      tp3: "$1.70 (+36%)",
-      tp4: "$0.310 (-40%)",
-      tp5: "$0.290 (-2%)",
-      sl: "$1.10 (-12%)",
-      leverage: "15x",
-      holding: "8 - 16 hours",
-      long: true,
-      short: false,
-      instrument: "future",
-      positionSize: "10",
-    },
-    {
-      token: "XRP.USDT",
-      entry: "$0.75 - $0.80",
-      tp1: "$0.90 (+12.5%)",
-      tp2: "$1.00 (+25%)",
-      tp3: "$1.10 (+37.5%)",
-      tp4: "$0.310 (-40%)",
-      tp5: "$0.290 (-2%)",
-      sl: "$0.70 (-12.5%)",
-      leverage: "25x",
-      holding: "10 - 20 hours",
-      long: true,
-      short: false,
-      instrument: "future",
-      positionSize: "10",
-    },
-    {
-      token: "SOL.USDT",
-      entry: "$150 - $155",
-      tp1: "$170 (+12.9%)",
-      tp2: "$185 (+19.4%)",
-      tp3: "$200 (+29%)",
-      tp4: "$0.310 (-40%)",
-      tp5: "$0.290 (-2%)",
-      sl: "$140 (-9.7%)",
-      leverage: "30x",
-      holding: "5 - 15 hours",
-      long: true,
-      short: false,
-      instrument: "future",
-      positionSize: "10",
-    },
-  ];
 
   const fetchTokenBalance = async () => {
     if (!publicKey || !connection) {
@@ -153,33 +60,150 @@ const Dashboard = () => {
       const accountInfo = await getAccount(connection, ata);
       setTokenBalance(Number(accountInfo?.amount) / Math.pow(10, 9));
     } catch (error) {
-      console.log("Token account may not exist:", error);
       setTokenBalance(0); // user doesn't have this token yet
     }
   };
 
-  useEffect(() => {
-    fetchTokenBalance();
-  }, [publicKey, connection]);
-
   const getUserProfileAPICall = useCallback(async () => {
+    if (walletAddress === null) return;
+
     try {
       const response = await axios.get(
         `https://signal-pipeline.up.railway.app/getuserprofile?wallet_address=${walletAddress}`
       );
       const data = response.data;
+      setGetUserProfileStatus(response?.status);
       if (data.unlockedCards && Array.isArray(data.unlockedCards)) {
         setUnlockedCards(data.unlockedCards);
       }
     } catch (error) {
       console.error("Error fetching user profile:", error);
-      setShowRiskQuestionModal(true)
+      setShowRiskQuestionModal(true);
     }
   }, [walletAddress]);
+
+  const getSignalsFromStreams = useCallback(
+    async (abortSignal: AbortSignal) => {
+      if (!riskScore) return;
+
+      // Map riskScore to risk level
+      let riskLevel = "mid";
+      if (riskScore < 400) riskLevel = "low";
+      else if (riskScore > 600) riskLevel = "high";
+
+      try {
+        const response = await fetch(
+          `https://signal-pipeline.up.railway.app/signal/stream?risk=${riskLevel}`,
+          { signal: abortSignal }
+        );
+
+        if (!response.body) {
+          console.error("No response body (stream) available.");
+          return;
+        }
+
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder();
+        let done = false;
+
+        while (!done) {
+          const { value, done: streamDone } = await reader.read();
+          done = streamDone;
+
+          if (value) {
+            const chunk = decoder.decode(value, { stream: true });
+
+            try {
+              // Parse SSE format (Server-Sent Events)
+              const lines = chunk.split("\n").filter((line) => line.trim());
+
+              lines.forEach((line) => {
+                // SSE format: "data: {json}"
+                if (line.startsWith("data:")) {
+                  try {
+                    // Remove "data: " prefix and parse JSON
+                    const jsonStr = line.substring(5).trim(); // Remove "data:" prefix
+                    const signal = JSON.parse(jsonStr);
+
+                    if (signal?.uuid && signal?.pair) {
+                      // Transform signal to match cards structure
+                      const transformedSignal = {
+                        uuid: signal.uuid || "-",
+                        token: signal.pair || "-",
+                        entry: "-",
+                        tp1: "-",
+                        tp2: "-",
+                        tp3: "-",
+                        tp4: "-",
+                        tp5: "-",
+                        sl: "-",
+                        leverage: "-",
+                        holding: "-",
+                        long: false,
+                        short: false,
+                        instrument: "-",
+                        positionSize: "-",
+                      };
+
+                      // Update state with new signal
+                      setStreamedSignals((prev) => {
+                        return [...prev, transformedSignal];
+                      });
+                    }
+                  } catch (e) {
+                    console.error(
+                      "Error parsing JSON from SSE data:",
+                      e,
+                      "Line:",
+                      line
+                    );
+                  }
+                } else if (line.trim() && !line.startsWith(":")) {
+                  // Non-empty, non-comment line that's not SSE format
+                  console.warn("Unexpected line format:", line);
+                }
+              });
+            } catch (parseError) {
+              console.error("Error parsing chunk:", parseError);
+            }
+          }
+        }
+      } catch (error: any) {
+        if (error.name === "AbortError") {
+        } else {
+          console.error("Error fetching signals:", error);
+        }
+      }
+    },
+    [riskScore]
+  );
+
+  useEffect(() => {
+    fetchTokenBalance();
+  }, [publicKey, connection]);
 
   useEffect(() => {
     getUserProfileAPICall();
   }, [walletAddress]);
+
+  useEffect(() => {
+    if (riskScore !== null && riskScore !== 0 && walletAddress !== null) {
+      // Clear previous signals when risk score changes
+      setStreamedSignals([]);
+
+      const abortController = new AbortController();
+      getSignalsFromStreams(abortController.signal);
+
+      // Cleanup: abort the stream when component unmounts or riskScore changes
+      return () => {
+        abortController.abort();
+      };
+    }
+  }, [riskScore, getSignalsFromStreams, walletAddress]);
+
+  // useEffect(() => {
+  //   getSignalsAfterPayForTip()
+  // }, [txSignature])
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-black via-[#0b0b0f] to-black text-white flex flex-col">
@@ -188,16 +212,27 @@ const Dashboard = () => {
 
       <div className="flex flex-1">
         {/* Main Content */}
-        <main className="flex-1 py-6 p-10 overflow-y-auto">
+        <main className="flex-1 p-4 lg:py-6 lg:p-8 overflow-y-auto">
           {/* First Division - Stats Overview */}
           <StatsOverview />
 
           {/* Second Division (Cards Section) */}
-          <TradingCards
-            cards={cards}
-            unlockedCards={unlockedCards}
-            onUnlock={handleUnlock}
-          />
+          {connected ? (
+            <TradingCards
+              cards={streamedSignals}
+              unlockedCards={unlockedCards}
+              // unblockedSignals={unlockedCards}
+              onUnlock={handleUnlock}
+            />
+          ) : (
+            <section className="p-4 mt-8 rounded-lg border border-[#2a2a33] bg-[#0e0e12]/30 h-2/3 flex items-center  justify-center">
+              <div className="text-center text-gray-400 text-lg font-semibold">
+                <h1 className="mb-3">
+                  Connect your wallet to view trading signals.
+                </h1>
+              </div>
+            </section>
+          )}
         </main>
       </div>
 
@@ -208,17 +243,22 @@ const Dashboard = () => {
         onSuccess={handlePaymentSuccess}
         cardIndex={selectedCard ?? 0}
         tokenBalance={tokenBalance}
-        walletAddress={walletAddress}
+        txSignature={txSignature}
+        setTxSignature={setTxSignature}
+        uuid={getCardUUID}
+        setUnlockedCards={setUnlockedCards}
       />
 
-      <RiskQuestionsModal
-        isOpen={showRiskQuestionModal}
-        onClose={() => setShowRiskQuestionModal(false)}
-        riskScore={riskScore}
-        setRiskScore={setRiskScore}
-        setShowRiskResultModal={setShowRiskResultModal}
-        walletAddress={walletAddress}
-      />
+      {getUserProfileStatus === 404 && (
+        <RiskQuestionsModal
+          isOpen={showRiskQuestionModal}
+          onClose={() => setShowRiskQuestionModal(false)}
+          riskScore={riskScore}
+          setRiskScore={setRiskScore}
+          setShowRiskResultModal={setShowRiskResultModal}
+          walletAddress={walletAddress}
+        />
+      )}
 
       <RiskResultModal
         isOpen={showRiskResultModal}

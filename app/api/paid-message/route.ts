@@ -67,7 +67,6 @@ async function verifyPayment(
       recipientWallet
     );
 
-
     // Check pre and post token balances
     const preBalances = tx.meta?.preTokenBalances || [];
     const postBalances = tx.meta?.postTokenBalances || [];
@@ -76,12 +75,15 @@ async function verifyPayment(
     const recipientATAString = recipientATA.toString();
 
     const preBalance = preBalances.find(
-      (b) => b.owner === recipientWallet.toString() && b.mint === mintAddress.toString()
+      (b) =>
+        b.owner === recipientWallet.toString() &&
+        b.mint === mintAddress.toString()
     );
     const postBalance = postBalances.find(
-      (b) => b.owner === recipientWallet.toString() && b.mint === mintAddress.toString()
+      (b) =>
+        b.owner === recipientWallet.toString() &&
+        b.mint === mintAddress.toString()
     );
-
 
     if (!postBalance) {
       console.error("Could not find recipient in post-balances");
@@ -189,7 +191,8 @@ export async function POST(request: NextRequest) {
     // Payment verified! Return the premium content
     return NextResponse.json({
       success: true,
-      message: "🎉 Congratulations! You have unlocked the premium trading signal. This exclusive tip is backed by our advanced AI analysis and has a high probability of success. Trade wisely!",
+      message:
+        "🎉 Congratulations! You have unlocked the premium trading signal. This exclusive tip is backed by our advanced AI analysis and has a high probability of success. Trade wisely!",
       signature: payment.signature,
       timestamp: new Date().toISOString(),
     });

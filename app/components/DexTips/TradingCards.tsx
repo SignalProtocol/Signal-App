@@ -3,39 +3,120 @@ import React, { useState, useMemo } from "react";
 interface Card {
   token: string;
   entry: string;
-  tp1: string;
-  tp2: string;
-  tp3: string;
-  tp4: string;
-  tp5: string;
-  sl: string;
+  tp1: { price: string; percentage: number };
+  tp2: { price: string; percentage: number };
+  tp3: { price: string; percentage: number };
+  tp4: { price: string; percentage: number };
+  tp5: { price: string; percentage: number };
+  sl: { price: string; percentage: number };
   leverage: string;
   holding: string;
   long: boolean;
   short: boolean;
   instrument: string;
   positionSize: string;
+  uuid: string;
+  isUnlocked?: boolean;
+}
+
+interface UnblockedSignal {
+  uuid: string;
+  [key: string]: any; // Allow other properties from the unblocked signal
 }
 
 interface TradingCardsProps {
   cards: Card[];
-  unlockedCards: number[];
-  onUnlock: (index: number) => void;
+  unlockedCards: UnblockedSignal[];
+  unblockedSignals?: UnblockedSignal[]; // Array of unblocked signals with UUIDs
+  onUnlock: (index: number, uuid: any) => void;
 }
 
 const TradingCards: React.FC<TradingCardsProps> = ({
   cards,
   unlockedCards,
+  unblockedSignals = [],
   onUnlock,
 }) => {
   const [query, setQuery] = useState("");
 
-  const filtered: Array<{ card: Card; index: number }> = useMemo(() => {
+  // Create a Map of unblocked signals by UUID for efficient lookup and data access
+  const unblockedSignalsMap = useMemo(() => {
+    const map = new Map();
+    unlockedCards.forEach((signal) => {
+      if (signal.uuid) {
+        map.set(signal.uuid, signal);
+      }
+    });
+    return map;
+  }, [unlockedCards]);
+
+  // Merge card data with unblocked signal data
+  const enrichedCards = useMemo(() => {
+    return cards.map((card) => {
+      const unblockedSignal = unblockedSignalsMap.get(card.uuid);
+
+      if (unblockedSignal) {
+        // Card is unlocked - merge with full signal data
+        return {
+          ...card,
+          token: unblockedSignal.pair || card.token,
+          entry: unblockedSignal.entry_zone?.join(" - ") || "-",
+          tp1: {
+            price: unblockedSignal.exit_zone?.[0]?.price || "-",
+            percentage:
+              unblockedSignal.exit_zone?.[0]?.pnl_percent?.toFixed(2) || "-",
+          },
+          tp2: {
+            price: unblockedSignal.exit_zone?.[1]?.price || "-",
+            percentage:
+              unblockedSignal.exit_zone?.[1]?.pnl_percent?.toFixed(2) || "-",
+          },
+          tp3: {
+            price: unblockedSignal.exit_zone?.[2]?.price || "-",
+            percentage:
+              unblockedSignal.exit_zone?.[2]?.pnl_percent?.toFixed(2) || "-",
+          },
+          tp4: {
+            price: unblockedSignal.exit_zone?.[3]?.price || "-",
+            percentage:
+              unblockedSignal.exit_zone?.[3]?.pnl_percent?.toFixed(2) || "-",
+          },
+          tp5: {
+            price: unblockedSignal.exit_zone?.[4]?.price || "-",
+            percentage:
+              unblockedSignal.exit_zone?.[4]?.pnl_percent?.toFixed(2) || "-",
+          },
+          sl: {
+            price: unblockedSignal.stop_loss?.price || "-",
+            percentage:
+              unblockedSignal.stop_loss?.stop_loss_pnl_percent?.toFixed(2) || "-",
+          },
+          leverage: unblockedSignal.leverage || card.leverage,
+          long: unblockedSignal.action === "Long",
+          short: unblockedSignal.action === "Short",
+          instrument: unblockedSignal.instrument || card.instrument,
+          positionSize: unblockedSignal.position_size_pct || card.positionSize,
+          isUnlocked: true,
+        };
+      }
+
+      // Card is locked - return original with minimal data
+      return {
+        ...card,
+        isUnlocked: false,
+      };
+    });
+  }, [cards, unblockedSignalsMap]);
+
+  const filtered: Array<{
+    card: Card & { isUnlocked: boolean };
+    index: number;
+  }> = useMemo(() => {
     const q = query.trim().toLowerCase();
     const normalize = (s: string) => s.toLowerCase().replace(/[^a-z0-9]/g, "");
-    if (!q) return cards.map((c, i) => ({ card: c, index: i }));
+    if (!q) return enrichedCards.map((c, i) => ({ card: c, index: i }));
     const nq = normalize(q);
-    return cards
+    return enrichedCards
       .map((c, i) => ({ card: c, index: i }))
       .filter(({ card }) => {
         // direct include (case-insensitive)
@@ -44,7 +125,7 @@ const TradingCards: React.FC<TradingCardsProps> = ({
         if (normalize(card.token).includes(nq)) return true;
         return false;
       });
-  }, [cards, query]);
+  }, [enrichedCards, query]);
 
   return (
     <section className="p-4 rounded-lg border border-[#2a2a33] bg-[#0e0e12]/30">
@@ -94,7 +175,8 @@ const TradingCards: React.FC<TradingCardsProps> = ({
       {/* Cards Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
         {filtered.map(({ card, index }) => {
-          const isUnlocked = unlockedCards.includes(index);
+          // Card is unlocked if it has the isUnlocked flag
+          const isUnlocked = card.isUnlocked;
           return (
             <div
               key={index}
@@ -168,35 +250,13 @@ const TradingCards: React.FC<TradingCardsProps> = ({
                       SHORT
                     </div>
                   )}
-                  {/* <div className="flex items-center justify-center gap-1.5 text-[10px] text-gray-400 pt-1 bg-[#1a1a1f]/40 rounded-md py-1.5">
-                    <svg
-                      className="w-3 h-3"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-                      />
-                    </svg>
-                    <span>{card.holding}</span>
-                  </div> */}
                   <div>
-                    <div className="flex items-center text-[11px] justify-end  mb-1">
-                      <h1>
-                        <b className="font-semibold">INSTRUMENT</b>
-                      </h1>
-                      : {card.instrument}
-                    </div>
-                    <div className="flex items-center text-[11px] justify-end ">
-                      <h1>
-                        <b className="font-semibold">POSITION SIZE in %</b>
-                      </h1>
-                      : {card.positionSize}
-                    </div>
+                    <h1 className="font-bold text-base text-white text-right">
+                      {card.instrument.toUpperCase()}
+                    </h1>
+                    <p className="text-[9px] text-yellow-300 drop-shadow-[0_0_8px_rgba(34,197,94,0.6)] uppercase tracking-wide">
+                      POSITION SIZE: {card.positionSize}%
+                    </p>
                   </div>
                 </div>
 
@@ -211,7 +271,7 @@ const TradingCards: React.FC<TradingCardsProps> = ({
                         Entry
                       </span>
                       <span className="text-white font-semibold text-xs">
-                        {card.entry}
+                        {card.entry || "-"}
                       </span>
                     </div>
                   </div>
@@ -223,7 +283,7 @@ const TradingCards: React.FC<TradingCardsProps> = ({
                         TP1
                       </span>
                       <span className="text-green-400 font-semibold text-[10px]">
-                        {card.tp1}
+                        {card.tp1?.price} ({card?.tp1?.percentage}%)
                       </span>
                     </div>
                     <div className="flex items-center justify-between bg-green-500/5 rounded-sm p-1.5 border border-green-500/20">
@@ -231,7 +291,7 @@ const TradingCards: React.FC<TradingCardsProps> = ({
                         TP2
                       </span>
                       <span className="text-green-400 font-semibold text-[10px]">
-                        {card.tp2}
+                        {card.tp2?.price} ({card?.tp2?.percentage}%)
                       </span>
                     </div>
                     <div className="flex items-center justify-between bg-green-500/5 rounded-sm p-1.5 border border-green-500/20">
@@ -239,7 +299,7 @@ const TradingCards: React.FC<TradingCardsProps> = ({
                         TP3
                       </span>
                       <span className="text-green-400 font-semibold text-[10px]">
-                        {card.tp3}
+                        {card.tp3?.price} ({card?.tp3?.percentage}%)
                       </span>
                     </div>
                     <div className="flex items-center justify-between bg-green-500/5 rounded-sm p-1.5 border border-green-500/20">
@@ -247,7 +307,7 @@ const TradingCards: React.FC<TradingCardsProps> = ({
                         TP4
                       </span>
                       <span className="text-green-400 font-semibold text-[10px]">
-                        {card.tp4}
+                        {card.tp4?.price} ({card?.tp4?.percentage}%)
                       </span>
                     </div>
                     <div className="flex items-center justify-between bg-green-500/5 rounded-sm p-1.5 border border-green-500/20">
@@ -255,7 +315,7 @@ const TradingCards: React.FC<TradingCardsProps> = ({
                         TP5
                       </span>
                       <span className="text-green-400 font-semibold text-[10px]">
-                        {card.tp5}
+                        {card.tp5?.price} ({card?.tp5?.percentage}%)
                       </span>
                     </div>
                     <div className="flex items-center justify-between bg-red-500/5 rounded-sm p-1.5 border border-red-500/20">
@@ -263,7 +323,7 @@ const TradingCards: React.FC<TradingCardsProps> = ({
                         SL
                       </span>
                       <span className="text-red-400 font-semibold text-[10px]">
-                        {card.sl}
+                        {card.sl.price} ({card.sl.percentage}%)
                       </span>
                     </div>
                   </div>
@@ -278,7 +338,7 @@ const TradingCards: React.FC<TradingCardsProps> = ({
                       {card.token}
                     </span>
                     <button
-                      onClick={() => onUnlock(index)}
+                      onClick={() => onUnlock(index, card.uuid)}
                       className={`flex items-center gap-1.5 px-4 py-2 rounded-sm text-xs font-semibold transition-all duration-300 transform hover:scale-105 border-2 border-indigo-500/50 text-indigo-400 hover:border-indigo-400 hover:bg-indigo-500/10 hover:shadow-[0_0_15px_rgba(99,102,241,0.3)] bg-[#0b0b0d]/60`}
                     >
                       <svg
@@ -304,7 +364,7 @@ const TradingCards: React.FC<TradingCardsProps> = ({
               <div className="relative flex justify-end mt-3 pt-2 border-t border-[#2a2a33] z-10">
                 {isUnlocked && (
                   <a
-                    href="https://app.hyperliquid.xyz/trade/BTC"
+                    href={`https://app.hyperliquid.xyz/trade/${card.token.split("/")[0]}`}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="flex items-center gap-1.5 px-4 py-2 rounded-sm text-xs font-semibold transition-all duration-300 transform hover:scale-105 border-2 border-green-500/50 text-green-400 hover:border-green-400 hover:bg-green-500/10 hover:shadow-[0_0_15px_rgba(16,185,129,0.3)] bg-transparent no-underline"

@@ -127,9 +127,7 @@ const RiskResultModal: React.FC<RiskResultModalProps> = ({
                     d={riskProfile?.iconPath}
                   />
                 </svg>
-                <h3
-                  className={`text-lg font-semibold ${riskProfile?.color}`}
-                >
+                <h3 className={`text-lg font-semibold ${riskProfile?.color}`}>
                   {riskProfile?.title}
                 </h3>
               </div>

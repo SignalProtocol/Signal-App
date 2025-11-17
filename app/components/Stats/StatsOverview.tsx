@@ -1,6 +1,6 @@
 const StatsOverview = () => {
   return (
-    <section className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-3 rounded-lg bg-[#0e0e12]/30">
+    <section className="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-6 mb-3 rounded-lg bg-[#0e0e12]/30">
       {/* Realized Profit */}
       <div className="relative bg-gradient-to-br from-[#141418]/90 to-[#1a1a1f]/90 border border-green-500/20 rounded-xl p-6 hover:shadow-[0_0_25px_rgba(34,197,94,0.3)] transition-all duration-300 overflow-hidden group">
         <div className="absolute top-0 right-0 w-32 h-32 bg-green-500/5 rounded-full blur-3xl group-hover:bg-green-500/10 transition-all"></div>
@@ -25,9 +25,7 @@ const StatsOverview = () => {
               </svg>
             </div>
           </div>
-          <p className="text-green-400 text-3xl font-bold mb-2">
-            $12,540
-          </p>
+          <p className="text-green-400 text-3xl font-bold mb-2">$12,540</p>
           <div className="flex items-center gap-2 text-xs">
             <span className="px-2 py-0.5 bg-green-500/10 text-green-400 rounded-md border border-green-500/20">
               +18.5%
