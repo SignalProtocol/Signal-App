@@ -1,29 +1,31 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useContext } from "react";
 import ModalClose from "../ModalCloseButton.tsx/ModalClose";
 import axios from "axios";
 import { useWallet } from "@solana/wallet-adapter-react";
+import { GlobalContext } from "../../context/GlobalContext";
 
 interface RiskQuestionsModalProps {
   isOpen: boolean;
   onClose: () => void;
-  riskScore: number | null;
-  setRiskScore: React.Dispatch<React.SetStateAction<number | null>>;
+  // riskScore: number | null;
+  // setRiskScore: React.Dispatch<React.SetStateAction<number | null>>;
   setShowRiskResultModal: React.Dispatch<React.SetStateAction<boolean>>;
-  walletAddress: string | null;
+  // walletAddress: string | null;
 }
 
 const RiskQuestionsModal: React.FC<RiskQuestionsModalProps> = ({
   isOpen,
   onClose,
-  riskScore,
-  setRiskScore,
+  // riskScore,
+  // setRiskScore,
   setShowRiskResultModal,
-  walletAddress,
+  // walletAddress,
 }) => {
-  const { connected } = useWallet();
-
+  const { state, dispatch } = useContext(GlobalContext);
+  const { riskScore } = state;
+  const { connected, publicKey } = useWallet();
   const [showInstructions, setShowInstructions] = useState(true);
   const [currentQuestion, setCurrentQuestion] = useState(1);
   const [selectedOptions, setSelectedOptions] = useState<{
@@ -331,16 +333,19 @@ const RiskQuestionsModal: React.FC<RiskQuestionsModalProps> = ({
       (acc, score) => acc + score,
       0
     );
-    setRiskScore(totalScore);
+    // setRiskScore(totalScore);
+    dispatch({ type: "SET_RISK_SCORE", payload: totalScore });
     onClose();
+    setCurrentQuestion(1);
+    setSelectedOptions({});
     setShowRiskResultModal(true);
-    await createUserAPICall();
+    await createUserAPICall(totalScore);
   };
 
-  const createUserAPICall = async () => {
+  const createUserAPICall = async (totalScore: number) => {
     const payload = {
-      wallet_address: walletAddress,
-      risk_score: riskScore,
+      wallet_address: publicKey?.toBase58(),
+      risk_score: totalScore,
     };
     try {
       await axios.post(
@@ -382,13 +387,13 @@ const RiskQuestionsModal: React.FC<RiskQuestionsModalProps> = ({
                     setCurrentQuestion(1);
                     setSelectedOptions({});
                   }}
-                  className="px-6 py-2 text-sm rounded-md font-semibold transition-all border border-indigo-500 text-indigo-400 hover:border-indigo-400 hover:text-indigo-300 bg-transparent shadow-[0_0_20px_rgba(99,102,241,0.2)]"
+                  className="px-6 py-2 text-sm rounded-md font-semibold transition-all border border-indigo-500 text-indigo-400 hover:border-indigo-400 hover:text-indigo-300 bg-transparent shadow-[0_0_20px_rgba(99,102,241,0.2)] cursor-pointer"
                 >
                   Start
                 </button>
                 <button
                   onClick={onClose}
-                  className="px-6 py-2 text-sm rounded-md font-semibold transition-all border border-gray-500 text-gray-400 hover:border-gray-400 hover:text-white bg-transparent"
+                  className="px-6 py-2 text-sm rounded-md font-semibold transition-all border border-gray-500 text-gray-400 hover:border-gray-400 hover:text-white bg-transparent cursor-pointer"
                 >
                   Cancel
                 </button>
@@ -453,7 +458,7 @@ const RiskQuestionsModal: React.FC<RiskQuestionsModalProps> = ({
                 className={`px-6 py-2 text-sm rounded-md font-semibold transition-all ${
                   currentQuestion === 1
                     ? "border border-gray-500 text-gray-500 cursor-not-allowed bg-transparent"
-                    : "border border-gray-400 text-gray-300 hover:border-gray-300 hover:text-white bg-transparent"
+                    : "border border-gray-400 text-gray-300 hover:border-gray-300 hover:text-white bg-transparent cursor-pointer shadow-[0_0_20px_rgba(99,102,241,0.2)"
                 }`}
               >
                 PREVIOUS
@@ -464,7 +469,7 @@ const RiskQuestionsModal: React.FC<RiskQuestionsModalProps> = ({
               {currentQuestion === Questions.length ? (
                 <button
                   onClick={addAllRiskScores}
-                  className="px-6 py-2 text-sm rounded-md font-semibold transition-all border border-indigo-500 text-indigo-400 hover:border-indigo-400 hover:text-indigo-300 bg-transparent shadow-[0_0_20px_rgba(99,102,241,0.2)]"
+                  className="px-6 py-2 text-sm rounded-md font-semibold transition-all border border-indigo-500 text-indigo-400 hover:border-indigo-400 hover:text-indigo-300 bg-transparent shadow-[0_0_20px_rgba(99,102,241,0.2)] cursor-pointer"
                 >
                   FINISH
                 </button>
@@ -476,7 +481,7 @@ const RiskQuestionsModal: React.FC<RiskQuestionsModalProps> = ({
                     )
                   }
                   disabled={!selectedOptions[currentQuestion]}
-                  className="px-6 py-2 text-sm rounded-md font-semibold transition-all border border-indigo-500 text-indigo-400 hover:border-indigo-400 hover:text-indigo-300 bg-transparent shadow-[0_0_20px_rgba(99,102,241,0.2)]"
+                  className="px-6 py-2 text-sm rounded-md font-semibold transition-all border border-indigo-500 text-indigo-400 hover:border-indigo-400 hover:text-indigo-300 bg-transparent shadow-[0_0_20px_rgba(99,102,241,0.2)] cursor-pointer"
                 >
                   NEXT
                 </button>

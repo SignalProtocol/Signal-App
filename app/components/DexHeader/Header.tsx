@@ -1,8 +1,19 @@
 "use client";
 
 import { WalletMultiButton } from "@solana/wallet-adapter-react-ui";
+import { useContext, useEffect } from "react";
+import { GlobalContext } from "../../context/GlobalContext";
+import { useWallet } from "@solana/wallet-adapter-react";
 
-const Header = ({ tokenBalance }: { tokenBalance: number | null }) => {
+const Header = ({
+  setShowRiskQuestionModal,
+}: {
+  setShowRiskQuestionModal: (show: boolean) => void;
+}) => {
+  const { state } = useContext(GlobalContext);
+  const { tokenBalance, riskScore, userProfileStatus } = state;
+  const { connected } = useWallet();
+
   return (
     <header
       className="flex items-center justify-between px-4 md:px-6 py-2 border-b border-[#1f1f25] bg-[#0e0e12]/80 backdrop-blur-xl shadow-lg"
@@ -31,6 +42,43 @@ const Header = ({ tokenBalance }: { tokenBalance: number | null }) => {
           </div>
         ) : null}
 
+        {connected ? (
+          !riskScore || riskScore === 0 || userProfileStatus === 404 ? null : riskScore >= 270 &&
+            riskScore <= 360 ? (
+            <button
+              className="cursor-pointer"
+              onClick={() => setShowRiskQuestionModal(true)}
+            >
+              <img
+                src="https://unpkg.com/emoji-datasource-google/img/google/64/1f9d8.png"
+                alt="🧘"
+                className="w-6 h-6"
+              />
+            </button>
+          ) : riskScore >= 361 && riskScore <= 485 ? (
+            <button
+              className="cursor-pointer"
+              onClick={() => setShowRiskQuestionModal(true)}
+            >
+              <img
+                src="https://unpkg.com/emoji-datasource-google/img/google/64/1f60e.png"
+                alt="😎"
+                className="w-6 h-6"
+              />
+            </button>
+          ) : (
+            <button
+              className="cursor-pointer"
+              onClick={() => setShowRiskQuestionModal(true)}
+            >
+              <img
+                src="https://unpkg.com/emoji-datasource-google/img/google/64/1f608.png"
+                alt="😈"
+                className="w-6 h-6"
+              />
+            </button>
+          )
+        ) : null}
         <div className="hidden md:flex items-center gap-2 px-1 py-1.5">
           <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
           <span className="text-xs text-gray-400">Live</span>

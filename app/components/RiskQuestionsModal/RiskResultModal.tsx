@@ -1,18 +1,19 @@
 "use client";
 
-import { useMemo, useState, useEffect } from "react";
+import { useMemo, useState, useEffect, useContext } from "react";
 import ModalClose from "../ModalCloseButton.tsx/ModalClose";
+import { GlobalContext } from "@/app/context/GlobalContext";
 
 interface RiskResultModalProps {
   isOpen: boolean;
   onClose: () => void;
-  riskScore: number | null;
+  // riskScore: number | null;
 }
 
 interface RiskProfile {
   title: string;
   color: string;
-  iconPath: string;
+  iconPath: React.ReactNode;
   characteristics: string[];
 }
 
@@ -20,7 +21,13 @@ const RISK_PROFILES: Record<string, RiskProfile> = {
   low: {
     title: "Low Risk Profile",
     color: "text-green-400",
-    iconPath: "M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z",
+    iconPath: (
+      <img
+        src="https://unpkg.com/emoji-datasource-google/img/google/64/1f9d8.png"
+        alt="🧘"
+        className="w-16 h-16"
+      />
+    ),
     characteristics: [
       "Conservative crypto investor with limited risk tolerance",
       "Prefers established coins (BTC/ETH) with minimal leverage",
@@ -32,8 +39,13 @@ const RISK_PROFILES: Record<string, RiskProfile> = {
   moderate: {
     title: "Moderate Risk Profile",
     color: "text-yellow-400",
-    iconPath:
-      "M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z",
+    iconPath: (
+      <img
+        src="https://unpkg.com/emoji-datasource-google/img/google/64/1f60e.png"
+        alt="😎"
+        className="w-16 h-16"
+      />
+    ),
     characteristics: [
       "Balanced crypto investor with moderate risk appetite",
       "Mix of established and emerging altcoins",
@@ -45,7 +57,13 @@ const RISK_PROFILES: Record<string, RiskProfile> = {
   high: {
     title: "High Risk Profile",
     color: "text-red-400",
-    iconPath: "M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z",
+    iconPath: (
+      <img
+        src="https://unpkg.com/emoji-datasource-google/img/google/64/1f608.png"
+        alt="😈"
+        className="w-16 h-16"
+      />
+    ),
     characteristics: [
       "Aggressive crypto trader seeking maximum returns",
       "Actively uses leverage (10x-100x+) on futures",
@@ -66,10 +84,11 @@ const getRiskProfileType = (score: number): string | null => {
 const RiskResultModal: React.FC<RiskResultModalProps> = ({
   isOpen,
   onClose,
-  riskScore,
+  // riskScore,
 }) => {
+  const { state } = useContext(GlobalContext);
+  const { riskScore } = state;
   const [isAnalyzing, setIsAnalyzing] = useState(true);
-
   const riskProfile = useMemo(() => {
     if (riskScore === null) return null;
     const profileType = getRiskProfileType(riskScore);
@@ -114,7 +133,7 @@ const RiskResultModal: React.FC<RiskResultModalProps> = ({
           <div className="text-gray-300 space-y-4">
             <div className="flex items-center gap-3 mb-5">
               <div className="flex flex-col items-center justify-center w-full">
-                <svg
+                {/* <svg
                   className={`w-15 h-15 ${riskProfile?.color}`}
                   fill="none"
                   stroke="currentColor"
@@ -126,7 +145,8 @@ const RiskResultModal: React.FC<RiskResultModalProps> = ({
                     strokeWidth={2}
                     d={riskProfile?.iconPath}
                   />
-                </svg>
+                </svg> */}
+                {riskProfile?.iconPath}
                 <h3 className={`text-lg font-semibold ${riskProfile?.color}`}>
                   {riskProfile?.title}
                 </h3>

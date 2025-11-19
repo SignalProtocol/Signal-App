@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useContext, useMemo } from "react";
 import PaymentModal from "./components/PaymentModal";
 import StatsOverview from "./components/Stats/StatsOverview";
 import TradingCards from "./components/DexTips/TradingCards";
@@ -10,30 +10,35 @@ import { getAccount, getAssociatedTokenAddress } from "@solana/spl-token";
 import { PublicKey } from "@solana/web3.js";
 import Header from "./components/DexHeader/Header";
 import axios from "axios";
-import { WalletMultiButton } from "@solana/wallet-adapter-react-ui";
+import { GlobalContext } from "./context/GlobalContext";
 
 const Dashboard = () => {
+  const { state, dispatch } = useContext(GlobalContext);
+  const { riskScore, userProfileStatus } = state;
   const { connection } = useConnection();
   const { publicKey, connected } = useWallet();
-  const [unlockedCards, setUnlockedCards] = useState<any[]>([]);
+  const WALLETADDRESS = useMemo(
+    () => publicKey?.toBase58() || null,
+    [publicKey]
+  );
+  // const [unlockedCards, setUnlockedCards] = useState<any[]>([]);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [selectedCard, setSelectedCard] = useState<number | null>(null);
-  const [showRiskQuestionModal, setShowRiskQuestionModal] = useState(true);
+  const [showRiskQuestionModal, setShowRiskQuestionModal] = useState(false);
   const [showRiskResultModal, setShowRiskResultModal] = useState(false);
-  const [riskScore, setRiskScore] = useState<number | null>(500);
-  const [tokenBalance, setTokenBalance] = useState<number | null>(null);
-  const [walletAddress, setWalletAddress] = useState<string | null>(null);
+  // const [riskScore, setRiskScore] = useState<number | null>(500);
+  // const [tokenBalance, setTokenBalance] = useState<number | null>(null);
+  // const [walletAddress, setWalletAddress] = useState<string | null>(null);
   const [streamedSignals, setStreamedSignals] = useState<any[]>([]);
-  const [getUserProfileStatus, setGetUserProfileStatus] = useState<
-    number | null
-  >(null);
-  const [txSignature, setTxSignature] = useState<string>("");
-  const [getCardUUID, setGetCardUUID] = useState<string>("");
+  // const [txSignature, setTxSignature] = useState<string>("");
+  // const [getCardUUID, setGetCardUUID] = useState<string>("");
+  // const [userProfileStatus, setUserProfileStatus] = useState<number>(0);
 
   const handleUnlock = (index: number, uuid: "") => {
     setSelectedCard(index);
     setShowPaymentModal(true);
-    setGetCardUUID(uuid);
+    // setGetCardUUID(uuid);
+    dispatch({ type: "SET_CARD_UUID", payload: uuid });
   };
 
   const handlePaymentSuccess = () => {
@@ -44,7 +49,8 @@ const Dashboard = () => {
   const fetchTokenBalance = async () => {
     if (!publicKey || !connection) {
       // Clear displayed token balance when wallet disconnects
-      setTokenBalance(null);
+      // setTokenBalance(null);
+      dispatch({ type: "SET_TOKEN_BALANCE", payload: null });
       return;
     }
 
@@ -54,33 +60,46 @@ const Dashboard = () => {
         "EEMZhENRymuN2TViQC1ijSmuEk3XnC1unkog8fERp7Eh"
       );
       const ata = await getAssociatedTokenAddress(TOKEN_MINT, publicKey);
-      setWalletAddress(publicKey.toBase58());
+      // setWalletAddress(publicKey.toBase58());
 
       // fetch token account details
       const accountInfo = await getAccount(connection, ata);
-      setTokenBalance(Number(accountInfo?.amount) / Math.pow(10, 9));
+      // setTokenBalance(Number(accountInfo?.amount) / Math.pow(10, 9));
+      dispatch({
+        type: "SET_TOKEN_BALANCE",
+        payload: Number(accountInfo?.amount) / Math.pow(10, 9),
+      });
     } catch (error) {
-      setTokenBalance(0); // user doesn't have this token yet
+      // setTokenBalance(0); // user doesn't have this token yet
+      dispatch({ type: "SET_TOKEN_BALANCE", payload: 0 });
     }
   };
 
-  const getUserProfileAPICall = useCallback(async () => {
-    if (walletAddress === null) return;
-
+  const getUserProfileAPICall = async () => {
+    if (!WALLETADDRESS) return;
+    
     try {
       const response = await axios.get(
-        `https://signal-pipeline.up.railway.app/getuserprofile?wallet_address=${walletAddress}`
+        `https://signal-pipeline.up.railway.app/getuserprofile?wallet_address=${WALLETADDRESS}`
       );
       const data = response.data;
-      setGetUserProfileStatus(response?.status);
-      if (data.unlockedCards && Array.isArray(data.unlockedCards)) {
-        setUnlockedCards(data.unlockedCards);
+      dispatch({ type: "SET_RISK_SCORE", payload: data?.risk_score });
+      if (data?.unlockedCards && Array.isArray(data?.unlockedCards)) {
+        // setUnlockedCards(data.unlockedCards);
+        dispatch({ type: "SET_UNLOCKED_CARDS", payload: data?.unlockedCards });
       }
     } catch (error) {
-      console.error("Error fetching user profile:", error);
-      setShowRiskQuestionModal(true);
+      console.error(
+        "Error fetching user profile:",
+        axios.isAxiosError(error) && error?.response?.status
+      );
+      // setShowRiskQuestionModal(true);
+      if (axios.isAxiosError(error) && error?.response?.status === 404) {
+        setShowRiskQuestionModal(true);
+        dispatch({ type: "SET_USER_PROFILE_STATUS", payload: 404 });
+      }
     }
-  }, [walletAddress]);
+  };
 
   const getSignalsFromStreams = useCallback(
     async (abortSignal: AbortSignal) => {
@@ -183,11 +202,12 @@ const Dashboard = () => {
   }, [publicKey, connection]);
 
   useEffect(() => {
+    dispatch({ type: "SET_USER_PROFILE_STATUS", payload: 0 });
     getUserProfileAPICall();
-  }, [walletAddress]);
+  }, [WALLETADDRESS]);
 
   useEffect(() => {
-    if (riskScore !== null && riskScore !== 0 && walletAddress !== null) {
+    if (riskScore !== null && riskScore !== 0 && WALLETADDRESS !== null) {
       // Clear previous signals when risk score changes
       setStreamedSignals([]);
 
@@ -199,16 +219,12 @@ const Dashboard = () => {
         abortController.abort();
       };
     }
-  }, [riskScore, getSignalsFromStreams, walletAddress]);
-
-  // useEffect(() => {
-  //   getSignalsAfterPayForTip()
-  // }, [txSignature])
+  }, [riskScore, getSignalsFromStreams, WALLETADDRESS]);
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-black via-[#0b0b0f] to-black text-white flex flex-col">
       {/* Top Bar */}
-      <Header tokenBalance={tokenBalance} />
+      <Header setShowRiskQuestionModal={setShowRiskQuestionModal} />
 
       <div className="flex flex-1">
         {/* Main Content */}
@@ -220,7 +236,7 @@ const Dashboard = () => {
           {connected ? (
             <TradingCards
               cards={streamedSignals}
-              unlockedCards={unlockedCards}
+              // unlockedCards={unlockedCards}
               // unblockedSignals={unlockedCards}
               onUnlock={handleUnlock}
             />
@@ -242,28 +258,25 @@ const Dashboard = () => {
         onClose={() => setShowPaymentModal(false)}
         onSuccess={handlePaymentSuccess}
         cardIndex={selectedCard ?? 0}
-        tokenBalance={tokenBalance}
-        txSignature={txSignature}
-        setTxSignature={setTxSignature}
-        uuid={getCardUUID}
-        setUnlockedCards={setUnlockedCards}
+        // tokenBalance={tokenBalance}
+        // tokenBalance={tokenBalance}
+        // txSignature={txSignature}
+        // setTxSignature={setTxSignature}
+        // uuid={getCardUUID}
+        // setUnlockedCards={setUnlockedCards}
       />
 
-      {getUserProfileStatus === 404 && (
-        <RiskQuestionsModal
-          isOpen={showRiskQuestionModal}
-          onClose={() => setShowRiskQuestionModal(false)}
-          riskScore={riskScore}
-          setRiskScore={setRiskScore}
-          setShowRiskResultModal={setShowRiskResultModal}
-          walletAddress={walletAddress}
-        />
-      )}
+      <RiskQuestionsModal
+        isOpen={showRiskQuestionModal}
+        onClose={() => setShowRiskQuestionModal(false)}
+        setShowRiskResultModal={setShowRiskResultModal}
+      />
+      
 
       <RiskResultModal
         isOpen={showRiskResultModal}
         onClose={() => setShowRiskResultModal(false)}
-        riskScore={riskScore}
+        // riskScore={riskScore}
       />
     </div>
   );

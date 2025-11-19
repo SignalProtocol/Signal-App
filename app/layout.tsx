@@ -4,6 +4,7 @@ import "./globals.css";
 import { SolanaWalletProvider } from "./config/solana";
 import WalletContextProvider from "./components/WalletContextProvider";
 import "@solana/wallet-adapter-react-ui/styles.css";
+import GlobalProvider from "./context/GlobalContext";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -32,9 +33,11 @@ export default function RootLayout({
       <body
         className={`${inter.variable} ${jetbrainsMono.variable} font-sans antialiased`}
       >
-        <WalletContextProvider>
-          <SolanaWalletProvider>{children}</SolanaWalletProvider>
-        </WalletContextProvider>
+        <GlobalProvider>
+          <WalletContextProvider>
+            <SolanaWalletProvider>{children}</SolanaWalletProvider>
+          </WalletContextProvider>
+        </GlobalProvider>
       </body>
     </html>
   );

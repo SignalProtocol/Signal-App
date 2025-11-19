@@ -1,4 +1,5 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useContext } from "react";
+import { GlobalContext } from "../../context/GlobalContext";
 
 interface Card {
   token: string;
@@ -26,29 +27,28 @@ interface UnblockedSignal {
 
 interface TradingCardsProps {
   cards: Card[];
-  unlockedCards: UnblockedSignal[];
-  unblockedSignals?: UnblockedSignal[]; // Array of unblocked signals with UUIDs
   onUnlock: (index: number, uuid: any) => void;
 }
 
 const TradingCards: React.FC<TradingCardsProps> = ({
   cards,
-  unlockedCards,
-  unblockedSignals = [],
+  // unLockedCards,
   onUnlock,
 }) => {
+  const { state } = useContext(GlobalContext);
+  const { unLockedCards } = state;
   const [query, setQuery] = useState("");
 
   // Create a Map of unblocked signals by UUID for efficient lookup and data access
   const unblockedSignalsMap = useMemo(() => {
     const map = new Map();
-    unlockedCards.forEach((signal) => {
+    unLockedCards?.forEach((signal) => {
       if (signal.uuid) {
         map.set(signal.uuid, signal);
       }
     });
     return map;
-  }, [unlockedCards]);
+  }, [unLockedCards]);
 
   // Merge card data with unblocked signal data
   const enrichedCards = useMemo(() => {
@@ -175,7 +175,7 @@ const TradingCards: React.FC<TradingCardsProps> = ({
 
       {/* Cards Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-        {filtered.map(({ card, index }) => {
+        {filtered?.map(({ card, index }) => {
           // Card is unlocked if it has the isUnlocked flag
           const isUnlocked = card.isUnlocked;
           return (
@@ -252,10 +252,10 @@ const TradingCards: React.FC<TradingCardsProps> = ({
                     </div>
                   )}
                   <div>
-                    <h1 className="font-bold text-base text-white text-right">
+                    {/* <h1 className="font-bold text-base text-white text-right">
                       {card.instrument.toUpperCase()}
-                    </h1>
-                    <p className="text-[9px] text-yellow-300 drop-shadow-[0_0_8px_rgba(34,197,94,0.6)] uppercase tracking-wide">
+                    </h1> */}
+                    <p className="text-[12px] text-yellow-300 drop-shadow-[0_0_8px_rgba(34,197,94,0.6)] uppercase tracking-wide">
                       POSITION SIZE: {card.positionSize}%
                     </p>
                   </div>
