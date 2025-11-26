@@ -81,7 +81,7 @@ const DexLinksModal: React.FC<DexLinksModalProps> = ({ isOpen, onClose }) => {
 
   return (
     <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div className="bg-gradient-to-br from-[#141418] to-[#1a1a1f] border border-indigo-500/30 rounded-xl max-w-2xl w-full p-6 shadow-[0_0_50px_rgba(99,102,241,0.3)] max-h-[90vh] overflow-y-auto">
+      <div className="bg-gradient-to-br from-[#141418] to-[#1a1a1f] border border-cyan-500/30 rounded-xl max-w-2xl w-full p-6 shadow-[0_0_50px_rgba(0,255,255,0.3)] max-h-[90vh] overflow-y-auto">
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-2xl font-bold text-white">Choose your Dex</h2>
           <ModalClose onClose={onClose} />
@@ -94,8 +94,8 @@ const DexLinksModal: React.FC<DexLinksModalProps> = ({ isOpen, onClose }) => {
               onClick={() => handleDexSelect(dex.id, dex.url)}
               className={`flex items-center gap-3 p-4 rounded-lg border-2 cursor-pointer transition-all duration-200 ${
                 selectedDex === dex.id
-                  ? "border-indigo-500 bg-indigo-500/10"
-                  : "border-gray-700/50 bg-gray-800/30 hover:border-indigo-500/50 hover:bg-gray-800/50"
+                  ? "border-cyan-500 bg-cyan-500/10"
+                  : "border-gray-700/50 bg-gray-800/30 hover:border-cyan-500/50 hover:bg-gray-800/50"
               }`}
             >
               <div className="flex items-center justify-center w-10 h-10 rounded-full bg-white/10 p-2 flex-shrink-0">
@@ -118,7 +118,7 @@ const DexLinksModal: React.FC<DexLinksModalProps> = ({ isOpen, onClose }) => {
               <div
                 className={`w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${
                   selectedDex === dex.id
-                    ? "border-indigo-500 bg-indigo-500"
+                    ? "border-cyan-500 bg-cyan-500"
                     : "border-gray-500"
                 }`}
               >
@@ -142,7 +142,7 @@ const DexLinksModal: React.FC<DexLinksModalProps> = ({ isOpen, onClose }) => {
             disabled={!selectedDex}
             className={`px-6 py-2 rounded-lg font-semibold transition-all ${
               selectedDex
-                ? "bg-gradient-to-r from-indigo-500 to-purple-500 text-white hover:shadow-lg hover:shadow-indigo-500/50"
+                ? "bg-gradient-to-r from-cyan-500 to-cyan-400 text-white hover:shadow-lg hover:shadow-cyan-500/50"
                 : "bg-gray-700 text-gray-500 cursor-not-allowed"
             }`}
           >

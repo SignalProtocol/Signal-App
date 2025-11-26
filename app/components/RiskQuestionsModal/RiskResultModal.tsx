@@ -110,16 +110,16 @@ const RiskResultModal: React.FC<RiskResultModalProps> = ({
 
   return (
     <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div className="bg-gradient-to-br from-[#141418] to-[#1a1a1f] border border-indigo-500/30 rounded-xl max-w-lg w-full p-6 shadow-[0_0_50px_rgba(99,102,241,0.3)]">
+      <div className="bg-gradient-to-br from-[#141418] to-[#1a1a1f] border border-[#2BC6FF]/30 rounded-xl max-w-lg w-full p-6 shadow-[0_0_50px_rgba(43,198,255,0.3)]">
         <div className="flex items-center justify-end mb-2">
           <ModalClose onClose={onClose} />
         </div>
         {isAnalyzing ? (
           <div className="flex flex-col items-center justify-center py-12 text-gray-300">
             <div className="relative mb-6">
-              <div className="w-16 h-16 border-4 border-indigo-500/30 border-t-indigo-500 rounded-full animate-spin"></div>
+              <div className="w-16 h-16 border-4 border-[#2BC6FF]/30 border-t-[#2BC6FF] rounded-full animate-spin"></div>
               <div
-                className="absolute inset-0 w-16 h-16 border-4 border-transparent border-b-purple-500 rounded-full animate-spin"
+                className="absolute inset-0 w-16 h-16 border-4 border-transparent border-b-[#00FFFF] rounded-full animate-spin"
                 style={{
                   animationDirection: "reverse",
                   animationDuration: "1s",

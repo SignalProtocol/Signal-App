@@ -32,6 +32,22 @@ body {
 /* Wallet adapter button styling */
 .wallet-adapter-button {
   font-size: 14px !important;
+  /* background: linear-gradient(to right, #2BC6FF, #00FFFF) !important;
+  background-color: #00e5e5 !important; */
+  border: 2px solid !important;
+    border-image: linear-gradient(to right, #2BC6FF, #00FFFF) 1 !important;
+  color: #2BC6FF !important;
+  background: transparent !important;
+  border-radius: 4px !important;
+}
+
+.wallet-adapter-button:not([disabled]):hover {
+  box-shadow: 0px 3px 10px 0px #2BC6FF;
+}
+
+.wallet-adapter-button[disabled] {
+  background: #4a5568 !important;
+  opacity: 0.6 !important;
 }
 
 @media (min-width: 768px) {
@@ -47,4 +63,23 @@ body {
 
 .wallet-adapter-dropdown-list {
   z-index: 9999 !important;
+}
+
+.gradient-text-color {
+  background: linear-gradient(to right, #2BC6FF, #00FFFF);
+  -webkit-background-clip: text;
+  color: transparent;
+}
+
+.gradient-border-color {
+  border: 2px solid;
+  border-image: linear-gradient(to right, #2BC6FF, #00FFFF) 1;
+  padding: 10px 20px;
+  background: transparent;
+  border-radius: 8px;
+  color: #2BC6FF;
+}
+
+.gradient-border-color:hover {
+  box-shadow: 0px 3px 8px 0px #2bc6ffb3;
 }

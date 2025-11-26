@@ -231,7 +231,7 @@ const TradingCards: React.FC<TradingCardsProps> = ({ cards, onUnlock }) => {
             placeholder="Search signals..."
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            className="w-full px-4 py-2.5 pl-10 bg-[#1a1a1f] border border-[#2a2a33] rounded-lg text-white text-sm placeholder-gray-500 focus:outline-none focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/50 transition-all"
+            className="w-full px-4 py-2.5 pl-10 bg-[#1a1a1f] border border-[#2a2a33] rounded-lg text-white text-sm placeholder-gray-500 focus:outline-none focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/50 transition-all"
           />
           <svg
             className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-500"
@@ -248,7 +248,7 @@ const TradingCards: React.FC<TradingCardsProps> = ({ cards, onUnlock }) => {
           </svg>
         </div>
         <button
-          className="flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-semibold transition-all duration-300 transform hover:scale-105 border-2 border-indigo-500/50 text-indigo-400 hover:border-indigo-400 hover:bg-indigo-500/10 hover:shadow-[0_0_15px_rgba(99,102,241,0.3)] cursor-pointer"
+          className="flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-semibold transition-all duration-300 transform hover:scale-102 gradient-border-color cursor-pointer"
           onClick={() => setShowDexLinksModal(true)}
         >
           <svg
@@ -282,7 +282,7 @@ const TradingCards: React.FC<TradingCardsProps> = ({ cards, onUnlock }) => {
           return (
             <div
               key={index}
-              className={`relative border rounded-xl p-4 bg-gradient-to-br from-[#141418]/90 to-[#1a1a1f]/90 border-[#2a2a33] transition-all duration-300 hover:scale-[1.02] hover:shadow-[0_0_30px_rgba(99,102,241,0.4)] hover:border-indigo-500/50 ${
+              className={`relative border rounded-xl p-4 bg-gradient-to-br from-[#141418]/90 to-[#1a1a1f]/90 border-[#2a2a33] transition-all duration-300 hover:scale-[1.02] hover:shadow-[0_0_30px_rgba(0,255,255,0.4)] hover:border-cyan-500/50 ${
                 isUnlocked ? "ring-2 ring-green-500/30" : ""
               }`}
             >
@@ -296,8 +296,8 @@ const TradingCards: React.FC<TradingCardsProps> = ({ cards, onUnlock }) => {
                 {/* Card Header with Token Badge */}
                 <div className="flex items-start justify-between mb-3 pb-2 border-b border-[#2a2a33]">
                   <div className="flex items-center gap-2">
-                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-indigo-500/20 to-purple-600/20 border border-indigo-500/30 flex items-center justify-center">
-                      <span className="text-indigo-400 font-bold text-[10px]">
+                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-cyan-500/20 to-cyan-400/20 border border-cyan-500/30 flex items-center justify-center">
+                      <span className="text-cyan-400 font-bold text-[10px]">
                         {card.token.split(".")[0].slice(0, 2)}
                       </span>
                     </div>
@@ -441,7 +441,7 @@ const TradingCards: React.FC<TradingCardsProps> = ({ cards, onUnlock }) => {
                     </span>
                     <button
                       onClick={() => onUnlock(index, card.uuid)}
-                      className={`flex items-center gap-1.5 px-4 py-2 rounded-sm text-xs font-semibold transition-all duration-300 transform hover:scale-105 border-2 border-indigo-500/50 text-indigo-400 hover:border-indigo-400 hover:bg-indigo-500/10 hover:shadow-[0_0_15px_rgba(99,102,241,0.3)] bg-[#0b0b0d]/60 cursor-pointer`}
+                      className={`flex items-center gap-1.5 px-4 py-2 rounded-sm text-xs font-semibold transition-all duration-300 transform hover:scale-105 gradient-border-color hover:border-cyan-400 hover:bg-cyan-500/10 hover:shadow-[0_0_15px_rgba(0,255,255,0.3)] bg-[#0b0b0d]/60 cursor-pointer`}
                     >
                       <svg
                         className="w-3.5 h-3.5"
@@ -469,7 +469,7 @@ const TradingCards: React.FC<TradingCardsProps> = ({ cards, onUnlock }) => {
                     href={`${dexLink}/${card.token.split("/")[0]}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex items-center gap-1.5 px-4 py-2 rounded-sm text-xs font-semibold transition-all duration-300 transform hover:scale-105 border-2 border-green-500/50 text-green-400 hover:border-green-400 hover:bg-green-500/10 hover:shadow-[0_0_15px_rgba(16,185,129,0.3)] bg-transparent no-underline"
+                    className="flex items-center gap-1.5 px-4 py-2 rounded-sm text-xs font-semibold transition-all duration-300 transform hover:scale-105 gradient-border-color bg-transparent no-underline"
                   >
                     <svg
                       className="w-3.5 h-3.5 mr-2"

@@ -363,7 +363,7 @@ const RiskQuestionsModal: React.FC<RiskQuestionsModalProps> = ({
 
   return (
     <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div className="bg-gradient-to-br from-[#141418] to-[#1a1a1f] border border-indigo-500/30 rounded-xl max-w-2xl w-full p-6 shadow-[0_0_50px_rgba(99,102,241,0.3)] max-h-[90vh] overflow-y-auto">
+      <div className="bg-gradient-to-br from-[#141418] to-[#1a1a1f] border border-[#2BC6FF]/30 rounded-xl max-w-2xl w-full p-6 shadow-[0_0_50px_rgba(43,198,255,0.3)] max-h-[90vh] overflow-y-auto">
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-2xl font-bold text-white">
             Risk Assessment Questions
@@ -373,8 +373,8 @@ const RiskQuestionsModal: React.FC<RiskQuestionsModalProps> = ({
 
         {showInstructions ? (
           <div className="mb-6">
-            <div className="bg-indigo-500/10 border border-indigo-500/30 rounded-lg px-4 py-6 mb-4 text-center">
-              <h3 className="text-lg font-semibold text-indigo-300 mb-3">
+            <div className="bg-[#2BC6FF]/10 border border-[#2BC6FF]/30 rounded-lg px-4 py-6 mb-4 text-center">
+              <h3 className="text-lg font-semibold text-[#00FFFF] mb-3">
                 {instructions.title}
               </h3>
               <p className="text-gray-300 text-sm mb-6">
@@ -387,7 +387,7 @@ const RiskQuestionsModal: React.FC<RiskQuestionsModalProps> = ({
                     setCurrentQuestion(1);
                     setSelectedOptions({});
                   }}
-                  className="px-6 py-2 text-sm rounded-md font-semibold transition-all border border-indigo-500 text-indigo-400 hover:border-indigo-400 hover:text-indigo-300 bg-transparent shadow-[0_0_20px_rgba(99,102,241,0.2)] cursor-pointer"
+                  className="px-6 py-2 text-sm rounded-md font-semibold transition-all border border-[#2BC6FF] text-[#2BC6FF] hover:border-[#00FFFF] hover:text-[#00FFFF] bg-transparent shadow-[0_0_20px_rgba(43,198,255,0.2)] cursor-pointer"
                 >
                   Start
                 </button>
@@ -403,8 +403,8 @@ const RiskQuestionsModal: React.FC<RiskQuestionsModalProps> = ({
         ) : (
           <>
             <div className="mb-6">
-              <div className="bg-indigo-500/10 border border-indigo-500/30 rounded-lg px-4 py-3 mb-4">
-                <h3 className="text-md font-semibold text-indigo-300 mb-2">
+              <div className="bg-[#2BC6FF]/10 border border-[#2BC6FF]/30 rounded-lg px-4 py-3 mb-4">
+                <h3 className="text-md font-semibold text-[#00FFFF] mb-2">
                   Question {currentQuestion} of {Questions.length}:{" "}
                   {Questions[currentQuestion - 1]?.title}
                 </h3>
@@ -418,7 +418,7 @@ const RiskQuestionsModal: React.FC<RiskQuestionsModalProps> = ({
                   (option, index) => (
                     <label
                       key={index}
-                      className="flex items-center gap-3 w-full text-left px-4 py-2 bg-[#1a1a1f] border border-gray-700 hover:border-indigo-500/50 rounded-lg transition-all hover:shadow-[0_0_20px_rgba(99,102,241,0.2)] cursor-pointer group"
+                      className="flex items-center gap-3 w-full text-left px-4 py-2 bg-[#1a1a1f] border border-gray-700 hover:border-[#2BC6FF]/50 rounded-lg transition-all hover:shadow-[0_0_20px_rgba(43,198,255,0.2)] cursor-pointer group"
                     >
                       <div className="relative flex-shrink-0 mt-0.5">
                         <input
@@ -434,10 +434,10 @@ const RiskQuestionsModal: React.FC<RiskQuestionsModalProps> = ({
                               [currentQuestion]: option.score,
                             })
                           }
-                          className="appearance-none w-5 h-5 rounded-full border border-gray-500 bg-transparent cursor-pointer transition-all checked:border-indigo-400 checked:bg-transparent hover:border-indigo-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:ring-offset-0"
+                          className="appearance-none w-5 h-5 rounded-full border border-gray-500 bg-transparent cursor-pointer transition-all checked:border-[#00FFFF] checked:bg-transparent hover:border-[#2BC6FF] focus:outline-none focus:ring-2 focus:ring-[#2BC6FF]/50 focus:ring-offset-0"
                         />
                         {selectedOptions[currentQuestion] === option.score && (
-                          <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/3 w-3 h-3 rounded-full bg-indigo-400 pointer-events-none" />
+                          <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/3 w-3 h-3 rounded-full bg-[#00FFFF] pointer-events-none" />
                         )}
                       </div>
                       <span className="text-gray-300 group-hover:text-white transition-colors text-sm flex-1">
@@ -458,7 +458,7 @@ const RiskQuestionsModal: React.FC<RiskQuestionsModalProps> = ({
                 className={`px-6 py-2 text-sm rounded-md font-semibold transition-all ${
                   currentQuestion === 1
                     ? "border border-gray-500 text-gray-500 cursor-not-allowed bg-transparent"
-                    : "border border-gray-400 text-gray-300 hover:border-gray-300 hover:text-white bg-transparent cursor-pointer shadow-[0_0_20px_rgba(99,102,241,0.2)"
+                    : "border border-gray-400 text-gray-300 hover:border-gray-300 hover:text-white bg-transparent cursor-pointer shadow-[0_0_20px_rgba(43,198,255,0.2)"
                 }`}
               >
                 PREVIOUS
@@ -469,7 +469,7 @@ const RiskQuestionsModal: React.FC<RiskQuestionsModalProps> = ({
               {currentQuestion === Questions.length ? (
                 <button
                   onClick={addAllRiskScores}
-                  className="px-6 py-2 text-sm rounded-md font-semibold transition-all border border-indigo-500 text-indigo-400 hover:border-indigo-400 hover:text-indigo-300 bg-transparent shadow-[0_0_20px_rgba(99,102,241,0.2)] cursor-pointer"
+                  className="px-6 py-2 text-sm rounded-md font-semibold transition-all border border-[#2BC6FF] text-[#2BC6FF] hover:border-[#00FFFF] hover:text-[#00FFFF] bg-transparent shadow-[0_0_20px_rgba(43,198,255,0.2)] cursor-pointer"
                 >
                   FINISH
                 </button>
@@ -481,7 +481,7 @@ const RiskQuestionsModal: React.FC<RiskQuestionsModalProps> = ({
                     )
                   }
                   disabled={!selectedOptions[currentQuestion]}
-                  className="px-6 py-2 text-sm rounded-md font-semibold transition-all border border-indigo-500 text-indigo-400 hover:border-indigo-400 hover:text-indigo-300 bg-transparent shadow-[0_0_20px_rgba(99,102,241,0.2)] cursor-pointer"
+                  className="px-6 py-2 text-sm rounded-md font-semibold transition-all border border-[#2BC6FF] text-[#2BC6FF] hover:border-[#00FFFF] hover:text-[#00FFFF] bg-transparent shadow-[0_0_20px_rgba(43,198,255,0.2)] cursor-pointer"
                 >
                   NEXT
                 </button>

@@ -278,7 +278,7 @@ export default function PaymentModal({
   if (!connected) {
     return (
       <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-        <div className="bg-gradient-to-br from-[#141418] to-[#1a1a1f] border border-indigo-500/30 rounded-xl max-w-lg w-full p-6 shadow-[0_0_50px_rgba(99,102,241,0.3)] text-center">
+        <div className="bg-gradient-to-br from-[#141418] to-[#1a1a1f] border border-cyan-500/30 rounded-xl max-w-lg w-full p-6 shadow-[0_0_50px_rgba(0,255,255,0.3)] text-center">
           <div className="flex items-center justify-end mb-6">
             <ModalClose onClose={onClose} />
           </div>
@@ -289,7 +289,7 @@ export default function PaymentModal({
             <p className="text-gray-300 text-sm mb-6">
               Connect your Solana wallet to unlock exclusive trading signals.
             </p>
-            <WalletMultiButton className="!w-full !py-2 !px-6 !rounded-lg !font-semibold !transition-all !bg-gradient-to-r !from-indigo-600 !to-purple-600 hover:!from-indigo-700 hover:!to-purple-700 !shadow-[0_0_20px_rgba(99,102,241,0.4)] hover:!shadow-[0_0_30px_rgba(99,102,241,0.6)]">
+            <WalletMultiButton className="!w-full !py-2 !px-6 !rounded-lg !font-semibold !transition-all !bg-gradient-to-r !from-cyan-600 !to-cyan-500 hover:!from-cyan-700 hover:!to-cyan-600 !shadow-[0_0_20px_rgba(0,255,255,0.4)] hover:!shadow-[0_0_30px_rgba(0,255,255,0.6)]">
               Connect Wallet
             </WalletMultiButton>
           </div>
@@ -301,12 +301,12 @@ export default function PaymentModal({
   if (loading) {
     return (
       <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-        <div className="bg-gradient-to-br from-[#141418] to-[#1a1a1f] border border-indigo-500/30 rounded-xl max-w-lg w-full p-6 shadow-[0_0_50px_rgba(99,102,241,0.3)]">
+        <div className="bg-gradient-to-br from-[#141418] to-[#1a1a1f] border border-cyan-500/30 rounded-xl max-w-lg w-full p-6 shadow-[0_0_50px_rgba(0,255,255,0.3)]">
           <div className="flex flex-col items-center justify-center py-12 text-gray-300">
             <div className="relative mb-6">
-              <div className="w-16 h-16 border-4 border-indigo-500/30 border-t-indigo-500 rounded-full animate-spin"></div>
+              <div className="w-16 h-16 border-4 border-cyan-500/30 border-t-cyan-500 rounded-full animate-spin"></div>
               <div
-                className="absolute inset-0 w-16 h-16 border-4 border-transparent border-b-purple-500 rounded-full animate-spin"
+                className="absolute inset-0 w-16 h-16 border-4 border-transparent border-b-cyan-400 rounded-full animate-spin"
                 style={{
                   animationDirection: "reverse",
                   animationDuration: "1s",
@@ -331,7 +331,7 @@ export default function PaymentModal({
 
   return (
     <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div className="bg-gradient-to-br from-[#141418] to-[#1a1a1f] border border-indigo-500/30 rounded-xl max-w-lg w-full p-6 shadow-[0_0_50px_rgba(99,102,241,0.3)]">
+      <div className="bg-gradient-to-br from-[#141418] to-[#1a1a1f] border border-cyan-500/30 rounded-xl max-w-lg w-full p-6 shadow-[0_0_50px_rgba(0,255,255,0.3)]">
         {tokenBalance && tokenBalance >= 69 ? (
           <div>
             <div className="flex items-center justify-between mb-6">
@@ -344,7 +344,7 @@ export default function PaymentModal({
             <div className="mb-6">
               <p className="text-gray-300 mb-4">
                 Pay{" "}
-                <span className="text-indigo-400 font-bold">
+                <span className="text-cyan-400 font-bold">
                   {initialPaymentResponse?.payment_instruction?.amount_usdc}
                 </span>{" "}
                 USDC on Solana devnet to unlock this exclusive trading signal
@@ -352,10 +352,10 @@ export default function PaymentModal({
                 levels.
               </p>
 
-              <div className="bg-indigo-500/10 border border-indigo-500/30 rounded-lg p-4 mb-4">
+              <div className="bg-cyan-500/10 border border-cyan-500/30 rounded-lg p-4 mb-4">
                 <div className="flex items-start gap-3">
                   <svg
-                    className="w-5 h-5 text-indigo-400 flex-shrink-0 mt-0.5"
+                    className="w-5 h-5 text-cyan-400 flex-shrink-0 mt-0.5"
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -368,7 +368,7 @@ export default function PaymentModal({
                     />
                   </svg>
                   <div className="text-sm text-gray-300">
-                    <p className="font-semibold text-indigo-300 mb-1">
+                    <p className="font-semibold text-cyan-300 mb-1">
                       Payment Details:
                     </p>
                     <ul className="space-y-1 text-xs">
@@ -394,7 +394,7 @@ export default function PaymentModal({
               className={`w-full py-3 px-6 rounded-lg font-semibold text-white transition-all mb-4 ${
                 !connected || loading
                   ? "bg-gray-600 cursor-not-allowed"
-                  : "bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 shadow-[0_0_20px_rgba(99,102,241,0.4)] hover:shadow-[0_0_30px_rgba(99,102,241,0.6)]"
+                  : "bg-gradient-to-r from-cyan-600 to-cyan-500 hover:from-cyan-700 hover:to-cyan-600 shadow-[0_0_20px_rgba(0,255,255,0.4)] hover:shadow-[0_0_30px_rgba(0,255,255,0.6)]"
               }`}
             >
               {loading
@@ -439,9 +439,9 @@ export default function PaymentModal({
             </div>
             <div className="flex items-center justify-center p-0 mt-6 h-[200px]">
               <div className="flex flex-col items-center text-center gap-4">
-                <div className="w-16 h-16 rounded-full bg-gradient-to-br from-indigo-500/20 to-purple-600/20 flex items-center justify-center border border-indigo-500/30">
+                <div className="w-16 h-16 rounded-full bg-gradient-to-br from-cyan-500/20 to-cyan-400/20 flex items-center justify-center border border-cyan-500/30">
                   <svg
-                    className="w-8 h-8 text-indigo-400"
+                    className="w-8 h-8 text-cyan-400"
                     fill="none"
                     viewBox="0 0 24 24"
                     stroke="currentColor"
@@ -460,7 +460,7 @@ export default function PaymentModal({
                   </h3>
                   <p className="text-sm text-gray-400">
                     Please hold at least{" "}
-                    <span className="text-indigo-400 font-semibold">
+                    <span className="text-cyan-400 font-semibold">
                       69 $SIGNAL
                     </span>{" "}
                     tokens to unlock trading tip cards.
