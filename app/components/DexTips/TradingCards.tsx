@@ -1,5 +1,6 @@
-import React, { useState, useMemo, useContext } from "react";
+import React, { useState, useMemo, useContext, useEffect } from "react";
 import { GlobalContext } from "../../context/GlobalContext";
+import DexLinksModal from "./DexLinksModal";
 
 interface Card {
   token: string;
@@ -30,29 +31,92 @@ interface TradingCardsProps {
   onUnlock: (index: number, uuid: any) => void;
 }
 
-const TradingCards: React.FC<TradingCardsProps> = ({
-  cards,
-  // unLockedCards,
-  onUnlock,
-}) => {
+const TradingCards: React.FC<TradingCardsProps> = ({ cards, onUnlock }) => {
   const { state } = useContext(GlobalContext);
   const { unLockedCards } = state;
+  const dexLink =
+    localStorage.getItem("selectedDex") || "https://app.hyperliquid.xyz/trade";
   const [query, setQuery] = useState("");
+  const [showDexLinksModal, setShowDexLinksModal] = useState(false);
+  const [refreshTrigger, setRefreshTrigger] = useState(0); // Used to trigger re-renders when cards expire
+
+  // Helper function to check if a card has expired (24 hours passed)
+  // All timestamps are in SECONDS
+  const isCardExpired = (unlockTime: string | number): boolean => {
+    if (!unlockTime) return false;
+
+    // unlockTime can be either:
+    // 1. A string (ISO date string)
+    // 2. A number in SECONDS (as stored by PaymentModal)
+    let unlockTimestampSeconds: number;
+
+    if (typeof unlockTime === "string") {
+      unlockTimestampSeconds = Math.floor(
+        new Date(unlockTime).getTime() / 1000
+      ); // Convert to seconds
+    } else {
+      // unlockTime is already in SECONDS
+      unlockTimestampSeconds = unlockTime;
+    }
+
+    const currentTimeSeconds = Math.floor(Date.now() / 1000); // Current time in seconds
+    const twentyFourHoursInSeconds = 86400; // 24 hours in seconds
+    // const twentyFourHoursInSeconds = 2 * 60; // 2 minutes for testing
+
+    return (
+      currentTimeSeconds - unlockTimestampSeconds >= twentyFourHoursInSeconds
+    );
+  };
 
   // Create a Map of unblocked signals by UUID for efficient lookup and data access
+  // Only include cards that haven't expired (within 24 hours)
   const unblockedSignalsMap = useMemo(() => {
     const map = new Map();
-    unLockedCards?.forEach((signal) => {
+
+    // If unLockedCards from global state is empty, try to get from localStorage
+    let unblockedCards = unLockedCards;
+
+    if (!unblockedCards || unblockedCards.length === 0) {
+      const storedUnblockedCards = localStorage.getItem("unlockedCards");
+      if (storedUnblockedCards) {
+        try {
+          unblockedCards = JSON.parse(storedUnblockedCards);
+        } catch (error) {
+          console.error(
+            "❌ Error parsing unblockedCards from localStorage:",
+            error
+          );
+          unblockedCards = [];
+        }
+      }
+    }
+
+    // Filter out expired cards and only add non-expired ones to the map
+    const validUnblockedCards: any[] = [];
+    unblockedCards?.forEach((signal) => {
       if (signal.uuid) {
-        map.set(signal.uuid, signal);
+        // Check if the card has expired
+        if (!isCardExpired(signal.time)) {
+          map.set(signal.uuid, signal);
+          validUnblockedCards.push(signal);
+        }
       }
     });
+
+    // Update localStorage with only valid (non-expired) cards
+    if (validUnblockedCards.length !== unblockedCards?.length) {
+      localStorage.setItem(
+        "unlockedCards",
+        JSON.stringify(validUnblockedCards)
+      );
+    }
+
     return map;
-  }, [unLockedCards]);
+  }, [unLockedCards, refreshTrigger]);
 
   // Merge card data with unblocked signal data
   const enrichedCards = useMemo(() => {
-    return cards.map((card) => {
+    return cards.map((card, index) => {
       const unblockedSignal = unblockedSignalsMap.get(card.uuid);
 
       if (unblockedSignal) {
@@ -98,6 +162,7 @@ const TradingCards: React.FC<TradingCardsProps> = ({
           instrument: unblockedSignal.instrument || card.instrument,
           positionSize: unblockedSignal.position_size_pct || card.positionSize,
           isUnlocked: true,
+          time: unblockedSignal.time,
         };
       }
 
@@ -109,7 +174,34 @@ const TradingCards: React.FC<TradingCardsProps> = ({
     });
   }, [cards, unblockedSignalsMap]);
 
-  const filtered: Array<{
+  // Periodically check for expired cards and trigger re-render
+  useEffect(() => {
+    // Check every minute for expired cards
+    const intervalId = setInterval(() => {
+      const storedUnblockedCards = localStorage.getItem("unlockedCards");
+      if (storedUnblockedCards) {
+        try {
+          const unblockedCards = JSON.parse(storedUnblockedCards);
+          const validCards = unblockedCards.filter(
+            (signal: any) => !isCardExpired(signal.time)
+          );
+
+          // If some cards have expired, update localStorage and force re-render
+          if (validCards.length !== unblockedCards.length) {
+            localStorage.setItem("unlockedCards", JSON.stringify(validCards));
+            // Force component to re-render by updating the refresh trigger
+            setRefreshTrigger((prev) => prev + 1);
+          }
+        } catch (error) {
+          console.error("Error checking expired cards:", error);
+        }
+      }
+    }, 60000); // Check every minute
+
+    return () => clearInterval(intervalId);
+  }, []);
+
+  const filteredCards: Array<{
     card: Card & { isUnlocked: boolean };
     index: number;
   }> = useMemo(() => {
@@ -155,7 +247,10 @@ const TradingCards: React.FC<TradingCardsProps> = ({
             />
           </svg>
         </div>
-        <button className="flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-semibold transition-all duration-300 transform hover:scale-105 border-2 border-indigo-500/50 text-indigo-400 hover:border-indigo-400 hover:bg-indigo-500/10 hover:shadow-[0_0_15px_rgba(99,102,241,0.3)]">
+        <button
+          className="flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-semibold transition-all duration-300 transform hover:scale-105 border-2 border-indigo-500/50 text-indigo-400 hover:border-indigo-400 hover:bg-indigo-500/10 hover:shadow-[0_0_15px_rgba(99,102,241,0.3)] cursor-pointer"
+          onClick={() => setShowDexLinksModal(true)}
+        >
           <svg
             className="w-4 h-4"
             fill="none"
@@ -171,11 +266,17 @@ const TradingCards: React.FC<TradingCardsProps> = ({
           </svg>
           <span>DEX LINK</span>
         </button>
+        {showDexLinksModal && (
+          <DexLinksModal
+            isOpen={showDexLinksModal}
+            onClose={() => setShowDexLinksModal(false)}
+          />
+        )}
       </div>
 
       {/* Cards Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-        {filtered?.map(({ card, index }) => {
+        {filteredCards?.map(({ card, index }) => {
           // Card is unlocked if it has the isUnlocked flag
           const isUnlocked = card.isUnlocked;
           return (
@@ -340,7 +441,7 @@ const TradingCards: React.FC<TradingCardsProps> = ({
                     </span>
                     <button
                       onClick={() => onUnlock(index, card.uuid)}
-                      className={`flex items-center gap-1.5 px-4 py-2 rounded-sm text-xs font-semibold transition-all duration-300 transform hover:scale-105 border-2 border-indigo-500/50 text-indigo-400 hover:border-indigo-400 hover:bg-indigo-500/10 hover:shadow-[0_0_15px_rgba(99,102,241,0.3)] bg-[#0b0b0d]/60`}
+                      className={`flex items-center gap-1.5 px-4 py-2 rounded-sm text-xs font-semibold transition-all duration-300 transform hover:scale-105 border-2 border-indigo-500/50 text-indigo-400 hover:border-indigo-400 hover:bg-indigo-500/10 hover:shadow-[0_0_15px_rgba(99,102,241,0.3)] bg-[#0b0b0d]/60 cursor-pointer`}
                     >
                       <svg
                         className="w-3.5 h-3.5"
@@ -365,9 +466,7 @@ const TradingCards: React.FC<TradingCardsProps> = ({
               <div className="relative flex justify-end mt-3 pt-2 border-t border-[#2a2a33] z-10">
                 {isUnlocked && (
                   <a
-                    href={`https://app.hyperliquid.xyz/trade/${
-                      card.token.split("/")[0]
-                    }`}
+                    href={`${dexLink}/${card.token.split("/")[0]}`}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="flex items-center gap-1.5 px-4 py-2 rounded-sm text-xs font-semibold transition-all duration-300 transform hover:scale-105 border-2 border-green-500/50 text-green-400 hover:border-green-400 hover:bg-green-500/10 hover:shadow-[0_0_15px_rgba(16,185,129,0.3)] bg-transparent no-underline"

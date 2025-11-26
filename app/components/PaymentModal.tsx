@@ -26,11 +26,6 @@ interface PaymentModalProps {
   onClose: () => void;
   onSuccess: (message: string) => void;
   cardIndex: number;
-  // tokenBalance: number | null;
-  // txSignature: string | null;
-  // setTxSignature: (signature: string) => void;
-  // uuid?: string;
-  // setUnlockedCards: (card: any) => void;
 }
 
 export default function PaymentModal({
@@ -38,12 +33,7 @@ export default function PaymentModal({
   onClose,
   onSuccess,
   cardIndex,
-}: // tokenBalance,
-// txSignature,
-// setTxSignature,
-// uuid,
-// setUnlockedCards,
-PaymentModalProps) {
+}: PaymentModalProps) {
   const { state, dispatch } = useContext(GlobalContext);
   const { cardUUID, txSignature, tokenBalance, unLockedCards } = state;
   const { connection } = useConnection();
@@ -171,9 +161,6 @@ PaymentModalProps) {
       // setTxSignature(signature);
       dispatch({ type: "SET_TX_SIGNATURE", payload: signature });
 
-      // Longer delay to ensure transaction is fully indexed and payment can be verified
-      await new Promise((resolve) => setTimeout(resolve, 3000));
-
       // Now make the final API call with the transaction signature
       await makeFinalPaymentAPICall(signature);
     } catch (err: any) {
@@ -242,14 +229,25 @@ PaymentModalProps) {
 
       // The response data is the trading signal itself, not wrapped in trading_signal
       const tradingSignal = response?.data;
+      const tradingSIgnalTime = response.headers["date"];
+      const unix = new Date(tradingSIgnalTime).getTime(); // in milliseconds
+      const unixSeconds = Math.floor(unix / 1000); // in seconds
+
+      // Create the new unlocked card with time
+      const newUnlockedCard = { ...tradingSignal, time: unixSeconds };
+      const updatedUnlockedCards = [...(unLockedCards || []), newUnlockedCard];
 
       // Add the unlocked card to the array
-      // setUnlockedCards((prev: any[]) => [...prev, tradingSignal]);
       dispatch({
         type: "SET_UNLOCKED_CARDS",
-        payload: [...(unLockedCards || []), tradingSignal],
-        // payload: [...(state.unLockedCards || []), tradingSignal],
+        payload: updatedUnlockedCards,
       });
+
+      // Store in localStorage
+      localStorage.setItem(
+        "unlockedCards",
+        JSON.stringify(updatedUnlockedCards)
+      );
 
       // Format a message from the trading signal data
       const message = `${tradingSignal.action} ${tradingSignal.pair} at ${tradingSignal.leverage} leverage`;
@@ -349,8 +347,8 @@ PaymentModalProps) {
                 <span className="text-indigo-400 font-bold">
                   {initialPaymentResponse?.payment_instruction?.amount_usdc}
                 </span>{" "}
-                USDC on Solana devnet to unlock this exclusive trading signal with
-                detailed entry points, take profit targets, and stop loss
+                USDC on Solana devnet to unlock this exclusive trading signal
+                with detailed entry points, take profit targets, and stop loss
                 levels.
               </p>
 

@@ -75,9 +75,9 @@ const RISK_PROFILES: Record<string, RiskProfile> = {
 };
 
 const getRiskProfileType = (score: number): string | null => {
-  if (score >= 270 && score <= 360) return "low";
+  if (score <= 360) return "low";
   if (score >= 361 && score <= 485) return "moderate";
-  if (score >= 486 && score <= 610) return "high";
+  if (score >= 486) return "high";
   return null;
 };
 

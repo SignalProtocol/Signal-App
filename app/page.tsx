@@ -14,30 +14,22 @@ import { GlobalContext } from "./context/GlobalContext";
 
 const Dashboard = () => {
   const { state, dispatch } = useContext(GlobalContext);
-  const { riskScore, userProfileStatus } = state;
+  const { riskScore } = state;
   const { connection } = useConnection();
   const { publicKey, connected } = useWallet();
   const WALLETADDRESS = useMemo(
     () => publicKey?.toBase58() || null,
     [publicKey]
   );
-  // const [unlockedCards, setUnlockedCards] = useState<any[]>([]);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [selectedCard, setSelectedCard] = useState<number | null>(null);
   const [showRiskQuestionModal, setShowRiskQuestionModal] = useState(false);
   const [showRiskResultModal, setShowRiskResultModal] = useState(false);
-  // const [riskScore, setRiskScore] = useState<number | null>(500);
-  // const [tokenBalance, setTokenBalance] = useState<number | null>(null);
-  // const [walletAddress, setWalletAddress] = useState<string | null>(null);
   const [streamedSignals, setStreamedSignals] = useState<any[]>([]);
-  // const [txSignature, setTxSignature] = useState<string>("");
-  // const [getCardUUID, setGetCardUUID] = useState<string>("");
-  // const [userProfileStatus, setUserProfileStatus] = useState<number>(0);
 
   const handleUnlock = (index: number, uuid: "") => {
     setSelectedCard(index);
     setShowPaymentModal(true);
-    // setGetCardUUID(uuid);
     dispatch({ type: "SET_CARD_UUID", payload: uuid });
   };
 
@@ -77,17 +69,41 @@ const Dashboard = () => {
 
   const getUserProfileAPICall = async () => {
     if (!WALLETADDRESS) return;
-    
+
     try {
       const response = await axios.get(
         `https://signal-pipeline.up.railway.app/getuserprofile?wallet_address=${WALLETADDRESS}`
       );
       const data = response.data;
       dispatch({ type: "SET_RISK_SCORE", payload: data?.risk_score });
-      if (data?.unlockedCards && Array.isArray(data?.unlockedCards)) {
-        // setUnlockedCards(data.unlockedCards);
-        dispatch({ type: "SET_UNLOCKED_CARDS", payload: data?.unlockedCards });
+
+      // Merge unlocked cards from API with localStorage
+      let mergedUnlockedCards: any[] = [];
+
+      // Get cards from localStorage
+      const storedCards = localStorage.getItem("unlockedCards");
+      if (storedCards) {
+        try {
+          mergedUnlockedCards = JSON.parse(storedCards);
+        } catch (error) {
+          console.error("Error parsing localStorage unlockedCards:", error);
+        }
       }
+
+      // Merge with API cards (if any)
+      if (data?.unlockedCards && Array.isArray(data?.unlockedCards)) {
+        // Add API cards that are not already in localStorage
+        data.unlockedCards.forEach((apiCard: any) => {
+          const exists = mergedUnlockedCards.some(
+            (card) => card.uuid === apiCard.uuid
+          );
+          if (!exists) {
+            mergedUnlockedCards.push(apiCard);
+          }
+        });
+      }
+
+      dispatch({ type: "SET_UNLOCKED_CARDS", payload: mergedUnlockedCards });
     } catch (error) {
       console.error(
         "Error fetching user profile:",
@@ -106,9 +122,10 @@ const Dashboard = () => {
       if (!riskScore) return;
 
       // Map riskScore to risk level
-      let riskLevel = "mid";
-      if (riskScore < 400) riskLevel = "low";
-      else if (riskScore > 600) riskLevel = "high";
+      let riskLevel = "";
+      if (riskScore <= 360 && riskScore >= 270) riskLevel = "low";
+      else if (riskScore >= 361 && riskScore <= 485) riskLevel = "mid";
+      else if (riskScore >= 486 && riskScore <= 610) riskLevel = "high";
 
       try {
         const response = await fetch(
@@ -234,12 +251,7 @@ const Dashboard = () => {
 
           {/* Second Division (Cards Section) */}
           {connected ? (
-            <TradingCards
-              cards={streamedSignals}
-              // unlockedCards={unlockedCards}
-              // unblockedSignals={unlockedCards}
-              onUnlock={handleUnlock}
-            />
+            <TradingCards cards={streamedSignals} onUnlock={handleUnlock} />
           ) : (
             <section className="p-4 mt-8 rounded-lg border border-[#2a2a33] bg-[#0e0e12]/30 h-2/3 flex items-center  justify-center">
               <div className="text-center text-gray-400 text-lg font-semibold">
@@ -258,12 +270,6 @@ const Dashboard = () => {
         onClose={() => setShowPaymentModal(false)}
         onSuccess={handlePaymentSuccess}
         cardIndex={selectedCard ?? 0}
-        // tokenBalance={tokenBalance}
-        // tokenBalance={tokenBalance}
-        // txSignature={txSignature}
-        // setTxSignature={setTxSignature}
-        // uuid={getCardUUID}
-        // setUnlockedCards={setUnlockedCards}
       />
 
       <RiskQuestionsModal
@@ -271,7 +277,6 @@ const Dashboard = () => {
         onClose={() => setShowRiskQuestionModal(false)}
         setShowRiskResultModal={setShowRiskResultModal}
       />
-      
 
       <RiskResultModal
         isOpen={showRiskResultModal}

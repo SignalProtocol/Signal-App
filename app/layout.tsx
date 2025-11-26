@@ -19,7 +19,7 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "TradePulse - Signal Dashboard",
+  title: "Signal Protocol",
   description: "Professional trading signals dashboard",
 };
 

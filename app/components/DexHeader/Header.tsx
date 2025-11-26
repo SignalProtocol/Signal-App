@@ -43,40 +43,59 @@ const Header = ({
         ) : null}
 
         {connected ? (
-          !riskScore || riskScore === 0 || userProfileStatus === 404 ? null : riskScore >= 270 &&
-            riskScore <= 360 ? (
-            <button
-              className="cursor-pointer"
-              onClick={() => setShowRiskQuestionModal(true)}
-            >
-              <img
-                src="https://unpkg.com/emoji-datasource-google/img/google/64/1f9d8.png"
-                alt="🧘"
-                className="w-6 h-6"
-              />
-            </button>
+          !riskScore ||
+          riskScore === 0 ||
+          userProfileStatus === 404 ? null : riskScore <= 360 ? (
+            <div className="relative group">
+              <button
+                className="cursor-pointer"
+                onClick={() => setShowRiskQuestionModal(true)}
+              >
+                <img
+                  src="https://unpkg.com/emoji-datasource-google/img/google/64/1f9d8.png"
+                  alt="🧘"
+                  className="w-6 h-6"
+                />
+              </button>
+              <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2 px-3 py-1.5 bg-gray-900 text-white text-xs font-medium rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap shadow-lg border border-gray-700">
+                Low Risk
+                <div className="absolute bottom-full left-1/2 -translate-x-1/2 -mb-1 border-4 border-transparent border-b-gray-900"></div>
+              </div>
+            </div>
           ) : riskScore >= 361 && riskScore <= 485 ? (
-            <button
-              className="cursor-pointer"
-              onClick={() => setShowRiskQuestionModal(true)}
-            >
-              <img
-                src="https://unpkg.com/emoji-datasource-google/img/google/64/1f60e.png"
-                alt="😎"
-                className="w-6 h-6"
-              />
-            </button>
+            <div className="relative group">
+              <button
+                className="cursor-pointer"
+                onClick={() => setShowRiskQuestionModal(true)}
+              >
+                <img
+                  src="https://unpkg.com/emoji-datasource-google/img/google/64/1f60e.png"
+                  alt="😎"
+                  className="w-6 h-6"
+                />
+              </button>
+              <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2 px-3 py-1.5 bg-gray-900 text-white text-xs font-medium rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap shadow-lg border border-gray-700">
+                Medium Risk
+                <div className="absolute bottom-full left-1/2 -translate-x-1/2 -mb-1 border-4 border-transparent border-b-gray-900"></div>
+              </div>
+            </div>
           ) : (
-            <button
-              className="cursor-pointer"
-              onClick={() => setShowRiskQuestionModal(true)}
-            >
-              <img
-                src="https://unpkg.com/emoji-datasource-google/img/google/64/1f608.png"
-                alt="😈"
-                className="w-6 h-6"
-              />
-            </button>
+            <div className="relative group">
+              <button
+                className="cursor-pointer"
+                onClick={() => setShowRiskQuestionModal(true)}
+              >
+                <img
+                  src="https://unpkg.com/emoji-datasource-google/img/google/64/1f608.png"
+                  alt="😈"
+                  className="w-6 h-6"
+                />
+              </button>
+              <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2 px-3 py-1.5 bg-gray-900 text-white text-xs font-medium rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap shadow-lg border border-gray-700">
+                High Risk
+                <div className="absolute bottom-full left-1/2 -translate-x-1/2 -mb-1 border-4 border-transparent border-b-gray-900"></div>
+              </div>
+            </div>
           )
         ) : null}
         <div className="hidden md:flex items-center gap-2 px-1 py-1.5">
