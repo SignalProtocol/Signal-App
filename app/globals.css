@@ -34,11 +34,10 @@ body {
   font-size: 14px !important;
   /* background: linear-gradient(to right, #2BC6FF, #00FFFF) !important;
   background-color: #00e5e5 !important; */
-  border: 2px solid !important;
-    border-image: linear-gradient(to right, #2BC6FF, #00FFFF) 1 !important;
+  border: 2px solid #2BC6FF !important;
   color: #2BC6FF !important;
   background: transparent !important;
-  border-radius: 4px !important;
+  border-radius: 9999px !important;
 }
 
 .wallet-adapter-button:not([disabled]):hover {
@@ -65,6 +64,35 @@ body {
   z-index: 9999 !important;
 }
 
+/* Wallet adapter modal list items - remove border, add hover highlight */
+/* Ultra-specific selectors to override library defaults */
+.wallet-adapter-modal-list .wallet-adapter-modal-list-item,
+.wallet-adapter-modal-list .wallet-adapter-modal-list-item *,
+.wallet-adapter-modal-wrapper button,
+.wallet-adapter-modal-wrapper li,
+ul.wallet-adapter-modal-list > li,
+ul.wallet-adapter-modal-list li button,
+[class*="wallet-adapter-modal"] button,
+[class*="wallet-adapter-modal"] li {
+  border: none !important;
+  border-width: 0 !important;
+  border-style: none !important;
+  border-radius: 9999px !important;
+  transition: background-color 0.2s ease !important;
+  outline: none !important;
+}
+
+.wallet-adapter-modal-list .wallet-adapter-modal-list-item:hover,
+.wallet-adapter-modal-wrapper button:hover,
+.wallet-adapter-modal-wrapper li:hover,
+ul.wallet-adapter-modal-list > li:hover,
+ul.wallet-adapter-modal-list li button:hover {
+  background-color: transparent !important;
+  border: none !important;
+  border-width: 0 !important;
+  outline: none !important;
+}
+
 .gradient-text-color {
   background: linear-gradient(to right, #2BC6FF, #00FFFF);
   -webkit-background-clip: text;
@@ -72,11 +100,10 @@ body {
 }
 
 .gradient-border-color {
-  border: 2px solid;
-  border-image: linear-gradient(to right, #2BC6FF, #00FFFF) 1;
+  border: 2px solid #2BC6FF;
   padding: 10px 20px;
   background: transparent;
-  border-radius: 8px;
+  border-radius: 9999px;
   color: #2BC6FF;
 }
 

@@ -289,7 +289,7 @@ export default function PaymentModal({
             <p className="text-gray-300 text-sm mb-6">
               Connect your Solana wallet to unlock exclusive trading signals.
             </p>
-            <WalletMultiButton className="!w-full !py-2 !px-6 !rounded-lg !font-semibold !transition-all !bg-gradient-to-r !from-cyan-600 !to-cyan-500 hover:!from-cyan-700 hover:!to-cyan-600 !shadow-[0_0_20px_rgba(0,255,255,0.4)] hover:!shadow-[0_0_30px_rgba(0,255,255,0.6)]">
+            <WalletMultiButton className="!w-full !py-2 !px-6 !rounded-full !font-semibold !transition-all !bg-gradient-to-r !from-cyan-600 !to-cyan-500 hover:!from-cyan-700 hover:!to-cyan-600 !shadow-[0_0_20px_rgba(0,255,255,0.4)] hover:!shadow-[0_0_30px_rgba(0,255,255,0.6)]">
               Connect Wallet
             </WalletMultiButton>
           </div>
@@ -352,7 +352,7 @@ export default function PaymentModal({
                 levels.
               </p>
 
-              <div className="bg-cyan-500/10 border border-cyan-500/30 rounded-lg p-4 mb-4">
+              <div className="bg-cyan-500/10 border border-cyan-500/30 rounded-3xl p-4 mb-4">
                 <div className="flex items-start gap-3">
                   <svg
                     className="w-5 h-5 text-cyan-400 flex-shrink-0 mt-0.5"
@@ -391,10 +391,10 @@ export default function PaymentModal({
             <button
               onClick={() => handlePayAndGetMessage()}
               disabled={!connected || loading}
-              className={`w-full py-3 px-6 rounded-lg font-semibold text-white transition-all mb-4 ${
+              className={`w-full py-3 px-6 rounded-full font-semibold text-white transition-all mb-4 ${
                 !connected || loading
                   ? "bg-gray-600 cursor-not-allowed"
-                  : "bg-gradient-to-r from-cyan-600 to-cyan-500 hover:from-cyan-700 hover:to-cyan-600 shadow-[0_0_20px_rgba(0,255,255,0.4)] hover:shadow-[0_0_30px_rgba(0,255,255,0.6)]"
+                  : "bg-gradient-to-r from-cyan-600 to-cyan-500 hover:from-cyan-500 hover:to-cyan-500 hover:scale-[1] shadow-[0_0_20px_rgba(0,255,255,0.4)] hover:shadow-[0_0_30px_rgba(0,255,255,0.6)]"
               }`}
             >
               {loading
@@ -405,13 +405,13 @@ export default function PaymentModal({
             </button>
 
             {error && (
-              <div className="bg-red-500/10 border border-red-500 rounded-lg p-4 mb-4">
+              <div className="bg-red-500/10 border border-red-500 rounded-3xl p-4 mb-4">
                 <p className="text-red-400 text-sm">{error}</p>
               </div>
             )}
 
             {txSignature && (
-              <div className="bg-green-500/10 border border-green-500 rounded-lg p-4 mb-4">
+              <div className="bg-green-500/10 border border-green-500 rounded-3xl p-4 mb-4">
                 <p className="text-green-400 text-sm mb-2 font-semibold">
                   ✅ Transaction Confirmed!
                 </p>

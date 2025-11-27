@@ -15,9 +15,9 @@ const StatsOverview = () => {
 
         {/* Coming Soon Content */}
         <div className="relative flex flex-col items-center justify-center gap-4 h-full py-4">
-          <div className="w-16 h-16 rounded-full bg-gradient-to-br from-[#2BC6FF] to-[#00FFFF] flex items-center justify-center shadow-[0_0_20px_rgba(0,255,255,0.4)]">
+          <div className="w-16 h-16 rounded-full bg-gradient-to-br from-cyan-500/30 to-cyan-400/20 flex items-center justify-center shadow-[0_0_15px_rgba(0,255,255,0.15)] border border-cyan-500/20">
             <svg
-              className="w-8 h-8 text-white"
+              className="w-8 h-8 text-cyan-300/70"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"

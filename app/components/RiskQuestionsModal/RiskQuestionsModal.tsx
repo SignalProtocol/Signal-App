@@ -387,13 +387,13 @@ const RiskQuestionsModal: React.FC<RiskQuestionsModalProps> = ({
                     setCurrentQuestion(1);
                     setSelectedOptions({});
                   }}
-                  className="px-6 py-2 text-sm rounded-md font-semibold transition-all border border-[#2BC6FF] text-[#2BC6FF] hover:border-[#00FFFF] hover:text-[#00FFFF] bg-transparent shadow-[0_0_20px_rgba(43,198,255,0.2)] cursor-pointer"
+                  className="px-6 py-2 text-sm rounded-full font-semibold transition-all border border-[#2BC6FF] text-[#2BC6FF] hover:border-[#00FFFF] hover:text-[#00FFFF] bg-transparent shadow-[0_0_20px_rgba(43,198,255,0.2)] cursor-pointer"
                 >
                   Start
                 </button>
                 <button
                   onClick={onClose}
-                  className="px-6 py-2 text-sm rounded-md font-semibold transition-all border border-gray-500 text-gray-400 hover:border-gray-400 hover:text-white bg-transparent cursor-pointer"
+                  className="px-6 py-2 text-sm rounded-full font-semibold transition-all border border-gray-500 text-gray-400 hover:border-gray-400 hover:text-white bg-transparent cursor-pointer"
                 >
                   Cancel
                 </button>
@@ -418,7 +418,7 @@ const RiskQuestionsModal: React.FC<RiskQuestionsModalProps> = ({
                   (option, index) => (
                     <label
                       key={index}
-                      className="flex items-center gap-3 w-full text-left px-4 py-2 bg-[#1a1a1f] border border-gray-700 hover:border-[#2BC6FF]/50 rounded-lg transition-all hover:shadow-[0_0_20px_rgba(43,198,255,0.2)] cursor-pointer group"
+                      className="flex items-center gap-3 w-full text-left px-4 py-2 bg-[#1a1a1f] border border-gray-700 hover:border-[#2BC6FF]/50 rounded-2xl transition-all hover:shadow-[0_0_20px_rgba(43,198,255,0.2)] cursor-pointer group"
                     >
                       <div className="relative flex-shrink-0 mt-0.5">
                         <input
@@ -455,7 +455,7 @@ const RiskQuestionsModal: React.FC<RiskQuestionsModalProps> = ({
                   setCurrentQuestion(Math.max(1, currentQuestion - 1))
                 }
                 disabled={currentQuestion === 1}
-                className={`px-6 py-2 text-sm rounded-md font-semibold transition-all ${
+                className={`px-6 py-2 text-sm rounded-full font-semibold transition-all ${
                   currentQuestion === 1
                     ? "border border-gray-500 text-gray-500 cursor-not-allowed bg-transparent"
                     : "border border-gray-400 text-gray-300 hover:border-gray-300 hover:text-white bg-transparent cursor-pointer shadow-[0_0_20px_rgba(43,198,255,0.2)"
@@ -469,7 +469,7 @@ const RiskQuestionsModal: React.FC<RiskQuestionsModalProps> = ({
               {currentQuestion === Questions.length ? (
                 <button
                   onClick={addAllRiskScores}
-                  className="px-6 py-2 text-sm rounded-md font-semibold transition-all border border-[#2BC6FF] text-[#2BC6FF] hover:border-[#00FFFF] hover:text-[#00FFFF] bg-transparent shadow-[0_0_20px_rgba(43,198,255,0.2)] cursor-pointer"
+                  className="px-6 py-2 text-sm rounded-full font-semibold transition-all border border-[#2BC6FF] text-[#2BC6FF] hover:border-[#00FFFF] hover:text-[#00FFFF] bg-transparent shadow-[0_0_20px_rgba(43,198,255,0.2)] cursor-pointer"
                 >
                   FINISH
                 </button>
@@ -481,7 +481,7 @@ const RiskQuestionsModal: React.FC<RiskQuestionsModalProps> = ({
                     )
                   }
                   disabled={!selectedOptions[currentQuestion]}
-                  className="px-6 py-2 text-sm rounded-md font-semibold transition-all border border-[#2BC6FF] text-[#2BC6FF] hover:border-[#00FFFF] hover:text-[#00FFFF] bg-transparent shadow-[0_0_20px_rgba(43,198,255,0.2)] cursor-pointer"
+                  className="px-6 py-2 text-sm rounded-full font-semibold transition-all border border-[#2BC6FF] text-[#2BC6FF] hover:border-[#00FFFF] hover:text-[#00FFFF] bg-transparent shadow-[0_0_20px_rgba(43,198,255,0.2)] cursor-pointer"
                 >
                   NEXT
                 </button>

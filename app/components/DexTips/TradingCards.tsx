@@ -231,7 +231,7 @@ const TradingCards: React.FC<TradingCardsProps> = ({ cards, onUnlock }) => {
             placeholder="Search signals..."
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            className="w-full px-4 py-2.5 pl-10 bg-[#1a1a1f] border border-[#2a2a33] rounded-lg text-white text-sm placeholder-gray-500 focus:outline-none focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/50 transition-all"
+            className="w-full px-4 py-2.5 pl-10 bg-[#1a1a1f] border border-[#2a2a33] rounded-full text-white text-sm placeholder-gray-500 focus:outline-none focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/50 transition-all"
           />
           <svg
             className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-500"
@@ -248,7 +248,7 @@ const TradingCards: React.FC<TradingCardsProps> = ({ cards, onUnlock }) => {
           </svg>
         </div>
         <button
-          className="flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-semibold transition-all duration-300 transform hover:scale-102 gradient-border-color cursor-pointer"
+          className="flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-semibold transition-all duration-300 transform hover:scale-[1.02] bg-gradient-to-r from-cyan-600 to-cyan-500 hover:from-cyan-500 hover:to-cyan-500 text-white shadow-[0_0_15px_rgba(0,255,255,0.3)] hover:shadow-[0_0_25px_rgba(0,255,255,0.5)] cursor-pointer border-none"
           onClick={() => setShowDexLinksModal(true)}
         >
           <svg
@@ -283,7 +283,7 @@ const TradingCards: React.FC<TradingCardsProps> = ({ cards, onUnlock }) => {
             <div
               key={index}
               className={`relative border rounded-xl p-4 bg-gradient-to-br from-[#141418]/90 to-[#1a1a1f]/90 border-[#2a2a33] transition-all duration-300 hover:scale-[1.02] hover:shadow-[0_0_30px_rgba(0,255,255,0.4)] hover:border-cyan-500/50 ${
-                isUnlocked ? "ring-2 ring-green-500/30" : ""
+                isUnlocked ? "ring-2 ring-cyan-500/30" : ""
               }`}
             >
               <div
@@ -312,7 +312,7 @@ const TradingCards: React.FC<TradingCardsProps> = ({ cards, onUnlock }) => {
                   </div>
                   {card.long && (
                     <div
-                      className="flex items-center gap-2 border-green-500/50 text-green-400 text-[10px] font-semibold rounded-sm border-2"
+                      className="flex items-center gap-2 border-green-500/50 text-green-400 text-[10px] font-semibold rounded-full border-2"
                       style={{ padding: "3px 10px" }}
                     >
                       <svg
@@ -333,7 +333,7 @@ const TradingCards: React.FC<TradingCardsProps> = ({ cards, onUnlock }) => {
                   )}
                   {card.short && (
                     <div
-                      className="flex items-center gap-2 border-red-500/50 text-red-400 text-[10px] font-semibold rounded-sm border-2"
+                      className="flex items-center gap-2 border-red-500/50 text-red-400 text-[10px] font-semibold rounded-full border-2"
                       style={{ padding: "3px 10px" }}
                     >
                       <svg
@@ -367,7 +367,7 @@ const TradingCards: React.FC<TradingCardsProps> = ({ cards, onUnlock }) => {
                   className={`space-y-2 text-xs transition-all duration-300`}
                 >
                   {/* Entry Zone */}
-                  <div className="bg-[#1a1a1f]/60 rounded-md p-2 border border-[#2a2a33]">
+                  <div className="bg-[#1a1a1f]/60 rounded-full p-2 border border-[#2a2a33]">
                     <div className="flex items-center justify-between">
                       <span className="text-gray-400 text-[10px] uppercase tracking-wider font-medium">
                         Entry
@@ -380,7 +380,7 @@ const TradingCards: React.FC<TradingCardsProps> = ({ cards, onUnlock }) => {
 
                   {/* Take Profits & Stop Loss Grid */}
                   <div className="grid grid-cols-2 gap-1.5">
-                    <div className="flex items-center justify-between bg-green-500/5 rounded-sm p-1.5 border border-green-500/20">
+                    <div className="flex items-center justify-between bg-green-500/5 rounded-full p-1.5 border border-green-500/20">
                       <span className="text-gray-400 text-[10px] font-medium">
                         TP1
                       </span>
@@ -388,7 +388,7 @@ const TradingCards: React.FC<TradingCardsProps> = ({ cards, onUnlock }) => {
                         {card.tp1?.price} ({card?.tp1?.percentage}%)
                       </span>
                     </div>
-                    <div className="flex items-center justify-between bg-green-500/5 rounded-sm p-1.5 border border-green-500/20">
+                    <div className="flex items-center justify-between bg-green-500/5 rounded-full p-1.5 border border-green-500/20">
                       <span className="text-gray-400 text-[10px] font-medium">
                         TP2
                       </span>
@@ -396,7 +396,7 @@ const TradingCards: React.FC<TradingCardsProps> = ({ cards, onUnlock }) => {
                         {card.tp2?.price} ({card?.tp2?.percentage}%)
                       </span>
                     </div>
-                    <div className="flex items-center justify-between bg-green-500/5 rounded-sm p-1.5 border border-green-500/20">
+                    <div className="flex items-center justify-between bg-green-500/5 rounded-full p-1.5 border border-green-500/20">
                       <span className="text-gray-400 text-[10px] font-medium">
                         TP3
                       </span>
@@ -404,7 +404,7 @@ const TradingCards: React.FC<TradingCardsProps> = ({ cards, onUnlock }) => {
                         {card.tp3?.price} ({card?.tp3?.percentage}%)
                       </span>
                     </div>
-                    <div className="flex items-center justify-between bg-green-500/5 rounded-sm p-1.5 border border-green-500/20">
+                    <div className="flex items-center justify-between bg-green-500/5 rounded-full p-1.5 border border-green-500/20">
                       <span className="text-gray-400 text-[10px] font-medium">
                         TP4
                       </span>
@@ -412,7 +412,7 @@ const TradingCards: React.FC<TradingCardsProps> = ({ cards, onUnlock }) => {
                         {card.tp4?.price} ({card?.tp4?.percentage}%)
                       </span>
                     </div>
-                    <div className="flex items-center justify-between bg-green-500/5 rounded-sm p-1.5 border border-green-500/20">
+                    <div className="flex items-center justify-between bg-green-500/5 rounded-full p-1.5 border border-green-500/20">
                       <span className="text-gray-400 text-[10px] font-medium">
                         TP5
                       </span>
@@ -420,7 +420,7 @@ const TradingCards: React.FC<TradingCardsProps> = ({ cards, onUnlock }) => {
                         {card.tp5?.price} ({card?.tp5?.percentage}%)
                       </span>
                     </div>
-                    <div className="flex items-center justify-between bg-red-500/5 rounded-sm p-1.5 border border-red-500/20">
+                    <div className="flex items-center justify-between bg-red-500/5 rounded-full p-1.5 border border-red-500/20">
                       <span className="text-gray-400 text-[10px] font-medium">
                         SL
                       </span>
@@ -441,7 +441,7 @@ const TradingCards: React.FC<TradingCardsProps> = ({ cards, onUnlock }) => {
                     </span>
                     <button
                       onClick={() => onUnlock(index, card.uuid)}
-                      className={`flex items-center gap-1.5 px-4 py-2 rounded-sm text-xs font-semibold transition-all duration-300 transform hover:scale-105 gradient-border-color hover:border-cyan-400 hover:bg-cyan-500/10 hover:shadow-[0_0_15px_rgba(0,255,255,0.3)] bg-[#0b0b0d]/60 cursor-pointer`}
+                      className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-xs font-semibold transition-all duration-300 transform hover:scale-105 gradient-border-color hover:border-cyan-400 hover:bg-cyan-500/10 hover:shadow-[0_0_15px_rgba(0,255,255,0.3)] bg-[#0b0b0d]/60 cursor-pointer`}
                     >
                       <svg
                         className="w-3.5 h-3.5"
@@ -469,7 +469,7 @@ const TradingCards: React.FC<TradingCardsProps> = ({ cards, onUnlock }) => {
                     href={`${dexLink}/${card.token.split("/")[0]}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex items-center gap-1.5 px-4 py-2 rounded-sm text-xs font-semibold transition-all duration-300 transform hover:scale-105 gradient-border-color bg-transparent no-underline"
+                    className="flex items-center gap-1.5 px-4 py-2 rounded-full text-xs font-semibold transition-all duration-300 transform hover:scale-105 bg-gradient-to-r from-cyan-600 to-cyan-500 hover:from-cyan-500 hover:to-cyan-500 text-white shadow-[0_0_15px_rgba(0,255,255,0.3)] hover:shadow-[0_0_25px_rgba(0,255,255,0.5)] no-underline border-none"
                   >
                     <svg
                       className="w-3.5 h-3.5 mr-2"
