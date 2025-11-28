@@ -4,6 +4,7 @@ import React, { useState, useContext } from "react";
 import ModalClose from "../ModalCloseButton.tsx/ModalClose";
 import { useWallet } from "@solana/wallet-adapter-react";
 import { GlobalContext } from "../../context/GlobalContext";
+import { useMixpanel } from "../../context/MixpanelContext";
 
 interface DexLinksModalProps {
   isOpen: boolean;
@@ -63,16 +64,24 @@ const DEX_OPTIONS: DexOption[] = [
 ];
 
 const DexLinksModal: React.FC<DexLinksModalProps> = ({ isOpen, onClose }) => {
-  const { connected } = useWallet();
+  const { connected, publicKey } = useWallet();
+  const { trackEvent } = useMixpanel();
   const [selectedDex, setSelectedDex] = useState<string | null>(null);
 
   if (!isOpen) return null;
 
   if (!connected) return null;
 
-  const handleDexSelect = (dexId: string, dexUrl: string) => {
-    setSelectedDex(dexId);
-    localStorage.setItem("selectedDex", dexUrl);
+  const handleDexSelect = (dex: DexOption) => {
+    setSelectedDex(dex.id);
+    localStorage.setItem("selectedDex", dex.url);
+    trackEvent("DEX Selected", {
+      dexId: dex.id,
+      dexName: dex.name,
+      dexUrl: dex.url,
+      walletAddress: publicKey?.toBase58(),
+      timestamp: new Date().toISOString(),
+    });
   };
 
   const handleConfirm = () => {
@@ -89,9 +98,9 @@ const DexLinksModal: React.FC<DexLinksModalProps> = ({ isOpen, onClose }) => {
 
         <div className="grid grid-cols-2 gap-3">
           {DEX_OPTIONS.map((dex) => (
-            <div
+            <button
               key={dex.id}
-              onClick={() => handleDexSelect(dex.id, dex.url)}
+              onClick={() => handleDexSelect(dex)}
               className={`flex items-center gap-2.5 p-3 rounded-2xl border-2 cursor-pointer transition-all duration-200 ${
                 selectedDex === dex.id
                   ? "border-cyan-500 bg-cyan-500/10"
@@ -126,7 +135,7 @@ const DexLinksModal: React.FC<DexLinksModalProps> = ({ isOpen, onClose }) => {
                   <div className="w-2.5 h-2.5 rounded-full bg-white"></div>
                 )}
               </div>
-            </div>
+            </button>
           ))}
         </div>
 

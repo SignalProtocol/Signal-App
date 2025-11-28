@@ -5,6 +5,7 @@ import ModalClose from "../ModalCloseButton.tsx/ModalClose";
 import axios from "axios";
 import { useWallet } from "@solana/wallet-adapter-react";
 import { GlobalContext } from "../../context/GlobalContext";
+import { useMixpanel } from "../../context/MixpanelContext";
 
 interface RiskQuestionsModalProps {
   isOpen: boolean;
@@ -26,6 +27,7 @@ const RiskQuestionsModal: React.FC<RiskQuestionsModalProps> = ({
   const { state, dispatch } = useContext(GlobalContext);
   const { riskScore } = state;
   const { connected, publicKey } = useWallet();
+  const { trackEvent } = useMixpanel();
   const [showInstructions, setShowInstructions] = useState(true);
   const [currentQuestion, setCurrentQuestion] = useState(1);
   const [selectedOptions, setSelectedOptions] = useState<{
@@ -328,11 +330,27 @@ const RiskQuestionsModal: React.FC<RiskQuestionsModalProps> = ({
     },
   ];
 
+  const getRiskLevel = (score: number): string => {
+    if (score <= 360) return "LOW";
+    if (score >= 361 && score <= 485) return "MEDIUM";
+    return "HIGH";
+  };
+
   const addAllRiskScores = async () => {
     const totalScore = Object.values(selectedOptions).reduce(
       (acc, score) => acc + score,
       0
     );
+    const riskLevel = getRiskLevel(totalScore);
+
+    // Track total score from Risk Questionnaire
+    trackEvent("Risk Questionnaire Completed", {
+      walletAddress: publicKey?.toBase58(),
+      totalScore: totalScore,
+      riskLevel: riskLevel,
+      timestamp: new Date().toISOString(),
+    });
+
     // setRiskScore(totalScore);
     dispatch({ type: "SET_RISK_SCORE", payload: totalScore });
     onClose();

@@ -1,6 +1,8 @@
 import React, { useState, useMemo, useContext, useEffect } from "react";
 import { GlobalContext } from "../../context/GlobalContext";
+import { useMixpanel } from "../../context/MixpanelContext";
 import DexLinksModal from "./DexLinksModal";
+import { useWallet } from "@solana/wallet-adapter-react";
 
 interface Card {
   token: string;
@@ -21,11 +23,6 @@ interface Card {
   isUnlocked?: boolean;
 }
 
-interface UnblockedSignal {
-  uuid: string;
-  [key: string]: any; // Allow other properties from the unblocked signal
-}
-
 interface TradingCardsProps {
   cards: Card[];
   onUnlock: (index: number, uuid: any) => void;
@@ -34,6 +31,8 @@ interface TradingCardsProps {
 const TradingCards: React.FC<TradingCardsProps> = ({ cards, onUnlock }) => {
   const { state } = useContext(GlobalContext);
   const { unLockedCards } = state;
+  const { publicKey } = useWallet();
+  const { trackEvent } = useMixpanel();
   const dexLink =
     localStorage.getItem("selectedDex") || "https://app.hyperliquid.xyz/trade";
   const [query, setQuery] = useState("");
@@ -174,6 +173,53 @@ const TradingCards: React.FC<TradingCardsProps> = ({ cards, onUnlock }) => {
     });
   }, [cards, unblockedSignalsMap]);
 
+  const filteredCards: Array<{
+    card: Card & { isUnlocked: boolean };
+    index: number;
+  }> = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    const normalize = (s: string) => s.toLowerCase().replace(/[^a-z0-9]/g, "");
+    if (!q) return enrichedCards.map((c, i) => ({ card: c, index: i }));
+    const nq = normalize(q);
+    return enrichedCards
+      .map((c, i) => ({ card: c, index: i }))
+      .filter(({ card }) => {
+        // direct include (case-insensitive)
+        if (card.token.toLowerCase().includes(q)) return true;
+        // normalized include (ignores punctuation like dots)
+        if (normalize(card.token).includes(nq)) return true;
+        return false;
+      });
+  }, [enrichedCards, query]);
+
+  const trackPayToUnlockClick = (card: Card) => {
+    trackEvent("Pay to Unlock Tip Button Clicked to unlock Card", {
+      token_name: card?.token,
+      card_uuid: card?.uuid,
+      timestamp: new Date().toISOString(),
+      walletAddress: publicKey?.toBase58(),
+    });
+  };
+
+  const handleChangeDexLink = () => {
+    trackEvent("DEX Link Button Clicked to choose Dex", {
+      timestamp: new Date().toISOString(),
+      walletAddress: publicKey?.toBase58(),
+      currentDexLink: dexLink,
+    });
+    setShowDexLinksModal(true);
+  };
+
+  const handleCheckDexTrack = (card: Card) => {
+    trackEvent("Clicked Unblocked card Dex link", {
+      timestamp: new Date().toISOString(),
+      walletAddress: publicKey?.toBase58(),
+      currentDexLink: dexLink,
+      token_name: card?.token,
+      card_uuid: card?.uuid,
+    });
+  }
+
   // Periodically check for expired cards and trigger re-render
   useEffect(() => {
     // Check every minute for expired cards
@@ -200,25 +246,6 @@ const TradingCards: React.FC<TradingCardsProps> = ({ cards, onUnlock }) => {
 
     return () => clearInterval(intervalId);
   }, []);
-
-  const filteredCards: Array<{
-    card: Card & { isUnlocked: boolean };
-    index: number;
-  }> = useMemo(() => {
-    const q = query.trim().toLowerCase();
-    const normalize = (s: string) => s.toLowerCase().replace(/[^a-z0-9]/g, "");
-    if (!q) return enrichedCards.map((c, i) => ({ card: c, index: i }));
-    const nq = normalize(q);
-    return enrichedCards
-      .map((c, i) => ({ card: c, index: i }))
-      .filter(({ card }) => {
-        // direct include (case-insensitive)
-        if (card.token.toLowerCase().includes(q)) return true;
-        // normalized include (ignores punctuation like dots)
-        if (normalize(card.token).includes(nq)) return true;
-        return false;
-      });
-  }, [enrichedCards, query]);
 
   return (
     <section className="p-4 rounded-lg border border-[#2a2a33] bg-[#0e0e12]/30">
@@ -249,7 +276,9 @@ const TradingCards: React.FC<TradingCardsProps> = ({ cards, onUnlock }) => {
         </div>
         <button
           className="flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-semibold transition-all duration-300 transform hover:scale-[1.02] bg-gradient-to-r from-cyan-600 to-cyan-500 hover:from-cyan-500 hover:to-cyan-500 text-white shadow-[0_0_15px_rgba(0,255,255,0.3)] hover:shadow-[0_0_25px_rgba(0,255,255,0.5)] cursor-pointer border-none"
-          onClick={() => setShowDexLinksModal(true)}
+          onClick={() => {
+            handleChangeDexLink();
+          }}
         >
           <svg
             className="w-4 h-4"
@@ -440,7 +469,10 @@ const TradingCards: React.FC<TradingCardsProps> = ({ cards, onUnlock }) => {
                       {card.token}
                     </span>
                     <button
-                      onClick={() => onUnlock(index, card.uuid)}
+                      onClick={() => {
+                        trackPayToUnlockClick(card);
+                        onUnlock(index, card.uuid);
+                      }}
                       className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-xs font-semibold transition-all duration-300 transform hover:scale-105 gradient-border-color hover:border-cyan-400 hover:bg-cyan-500/10 hover:shadow-[0_0_15px_rgba(0,255,255,0.3)] bg-[#0b0b0d]/60 cursor-pointer`}
                     >
                       <svg
@@ -470,6 +502,9 @@ const TradingCards: React.FC<TradingCardsProps> = ({ cards, onUnlock }) => {
                     target="_blank"
                     rel="noopener noreferrer"
                     className="flex items-center gap-1.5 px-4 py-2 rounded-full text-xs font-semibold transition-all duration-300 transform hover:scale-105 bg-gradient-to-r from-cyan-600 to-cyan-500 hover:from-cyan-500 hover:to-cyan-500 text-white shadow-[0_0_15px_rgba(0,255,255,0.3)] hover:shadow-[0_0_25px_rgba(0,255,255,0.5)] no-underline border-none"
+                    onClick={() => {
+                      handleCheckDexTrack(card)
+                    }}
                   >
                     <svg
                       className="w-3.5 h-3.5 mr-2"

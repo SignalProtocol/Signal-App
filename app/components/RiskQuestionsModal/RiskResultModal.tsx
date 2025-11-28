@@ -3,6 +3,8 @@
 import { useMemo, useState, useEffect, useContext } from "react";
 import ModalClose from "../ModalCloseButton.tsx/ModalClose";
 import { GlobalContext } from "@/app/context/GlobalContext";
+import { useMixpanel } from "@/app/context/MixpanelContext";
+import { useWallet } from "@solana/wallet-adapter-react";
 
 interface RiskResultModalProps {
   isOpen: boolean;
@@ -88,7 +90,16 @@ const RiskResultModal: React.FC<RiskResultModalProps> = ({
 }) => {
   const { state } = useContext(GlobalContext);
   const { riskScore } = state;
+  const { trackEvent } = useMixpanel();
+  const { publicKey } = useWallet();
   const [isAnalyzing, setIsAnalyzing] = useState(true);
+
+  const getRiskLevelName = (score: number): string => {
+    if (score <= 360) return "LOW";
+    if (score >= 361 && score <= 485) return "MEDIUM";
+    return "HIGH";
+  };
+
   const riskProfile = useMemo(() => {
     if (riskScore === null) return null;
     const profileType = getRiskProfileType(riskScore);
@@ -97,6 +108,14 @@ const RiskResultModal: React.FC<RiskResultModalProps> = ({
 
   useEffect(() => {
     if (isOpen && riskScore !== null) {
+      // Track Risk Result Modal opened
+      trackEvent("Risk Result Modal Opened", {
+        walletAddress: publicKey?.toBase58(),
+        totalScore: riskScore,
+        riskLevel: getRiskLevelName(riskScore),
+        timestamp: new Date().toISOString(),
+      });
+
       setIsAnalyzing(true);
       const timer = setTimeout(() => {
         setIsAnalyzing(false);
@@ -104,7 +123,7 @@ const RiskResultModal: React.FC<RiskResultModalProps> = ({
 
       return () => clearTimeout(timer);
     }
-  }, [isOpen, riskScore]);
+  }, [isOpen, riskScore, trackEvent, publicKey]);
 
   if (!isOpen) return null;
 

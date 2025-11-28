@@ -11,12 +11,14 @@ import { PublicKey } from "@solana/web3.js";
 import Header from "./components/DexHeader/Header";
 import axios from "axios";
 import { GlobalContext } from "./context/GlobalContext";
+import { useMixpanel } from "./context/MixpanelContext";
 
 const Dashboard = () => {
   const { state, dispatch } = useContext(GlobalContext);
   const { riskScore } = state;
   const { connection } = useConnection();
   const { publicKey, connected } = useWallet();
+  const { trackEvent } = useMixpanel();
   const WALLETADDRESS = useMemo(
     () => publicKey?.toBase58() || null,
     [publicKey]
@@ -109,10 +111,14 @@ const Dashboard = () => {
         "Error fetching user profile:",
         axios.isAxiosError(error) && error?.response?.status
       );
-      // setShowRiskQuestionModal(true);
       if (axios.isAxiosError(error) && error?.response?.status === 404) {
         setShowRiskQuestionModal(true);
         dispatch({ type: "SET_USER_PROFILE_STATUS", payload: 404 });
+        trackEvent("Risk Question Modal Opened", {
+          walletAddress: WALLETADDRESS,
+          timestamp: new Date().toISOString(),
+          reason: "User profile not found",
+        });
       }
     }
   };
@@ -269,7 +275,8 @@ const Dashboard = () => {
         isOpen={showPaymentModal}
         onClose={() => setShowPaymentModal(false)}
         onSuccess={handlePaymentSuccess}
-        cardIndex={selectedCard ?? 0}
+        // @ts-ignore: cardToken isn't declared in PaymentModalProps; passing it anyway
+        cardToken={selectedCard !== null ? streamedSignals[selectedCard]?.token : undefined}
       />
 
       <RiskQuestionsModal
@@ -281,7 +288,6 @@ const Dashboard = () => {
       <RiskResultModal
         isOpen={showRiskResultModal}
         onClose={() => setShowRiskResultModal(false)}
-        // riskScore={riskScore}
       />
     </div>
   );

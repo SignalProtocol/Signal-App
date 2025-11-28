@@ -1,9 +1,10 @@
 "use client";
 
 import { WalletMultiButton } from "@solana/wallet-adapter-react-ui";
-import { useContext, useEffect } from "react";
+import { useContext, useEffect, useRef } from "react";
 import { GlobalContext } from "../../context/GlobalContext";
 import { useWallet } from "@solana/wallet-adapter-react";
+import { useMixpanel } from "../../context/MixpanelContext";
 
 const Header = ({
   setShowRiskQuestionModal,
@@ -12,7 +13,47 @@ const Header = ({
 }) => {
   const { state } = useContext(GlobalContext);
   const { tokenBalance, riskScore, userProfileStatus } = state;
-  const { connected } = useWallet();
+  const { connected, publicKey } = useWallet();
+  const { trackEvent } = useMixpanel();
+  const prevConnectedRef = useRef<boolean>(false);
+  const walletAddressRef = useRef<string | null>(null);
+
+  const handleOpenRiskQuestionModal = () => {
+    setShowRiskQuestionModal(true);
+    trackEvent("User opened Risk Question Modal to change the risk profile", {
+      walletAddress: publicKey?.toBase58(),
+      timestamp: new Date().toISOString(),
+      reason: "User wants to change risk profile",
+    });
+  };
+
+  // Track wallet connection and disconnection
+  useEffect(() => {
+    const currentWalletAddress = publicKey?.toBase58();
+
+    // Store the current wallet address when connected
+    if (connected && currentWalletAddress) {
+      walletAddressRef.current = currentWalletAddress;
+    }
+
+    if (connected && !prevConnectedRef.current) {
+      // Wallet connected
+      trackEvent("Wallet Connected", {
+        walletAddress: currentWalletAddress,
+        timestamp: new Date().toISOString(),
+      });
+    } else if (!connected && prevConnectedRef.current) {
+      // Wallet disconnected - use the stored wallet address
+      trackEvent("Wallet Disconnected", {
+        walletAddress: walletAddressRef.current,
+        timestamp: new Date().toISOString(),
+      });
+      // Clear the stored address after disconnection
+      walletAddressRef.current = null;
+    }
+
+    prevConnectedRef.current = connected;
+  }, [connected, publicKey, trackEvent]);
 
   return (
     <header
@@ -25,7 +66,10 @@ const Header = ({
       <div className="flex items-center gap-4">
         {tokenBalance !== null && tokenBalance !== undefined ? (
           <div className="p-2 px-4 text-sm font-light rounded-full border-3 border-cyan-500/50 bg-[#1f1f25] transition-all duration-300 text-white">
-            Bal: <b className="gradient-text-color font-semibold">{tokenBalance} $SIGNAL</b>
+            Bal:{" "}
+            <b className="gradient-text-color font-semibold">
+              {tokenBalance} $SIGNAL
+            </b>
           </div>
         ) : null}
 
@@ -36,7 +80,7 @@ const Header = ({
             <div className="relative group">
               <button
                 className="cursor-pointer"
-                onClick={() => setShowRiskQuestionModal(true)}
+                onClick={() => handleOpenRiskQuestionModal()}
               >
                 <img
                   src="https://unpkg.com/emoji-datasource-google/img/google/64/1f9d8.png"
@@ -53,7 +97,7 @@ const Header = ({
             <div className="relative group">
               <button
                 className="cursor-pointer"
-                onClick={() => setShowRiskQuestionModal(true)}
+                onClick={() => handleOpenRiskQuestionModal()}
               >
                 <img
                   src="https://unpkg.com/emoji-datasource-google/img/google/64/1f60e.png"
@@ -70,7 +114,7 @@ const Header = ({
             <div className="relative group">
               <button
                 className="cursor-pointer"
-                onClick={() => setShowRiskQuestionModal(true)}
+                onClick={() => handleOpenRiskQuestionModal()}
               >
                 <img
                   src="https://unpkg.com/emoji-datasource-google/img/google/64/1f608.png"

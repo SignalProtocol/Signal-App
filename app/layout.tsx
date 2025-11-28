@@ -1,10 +1,11 @@
-import type { Metadata } from "next";
+"use client";
 import { Inter, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import { SolanaWalletProvider } from "./config/solana";
 import WalletContextProvider from "./components/WalletContextProvider";
 import "@solana/wallet-adapter-react-ui/styles.css";
 import GlobalProvider from "./context/GlobalContext";
+import { MixpanelProvider } from "./context/MixpanelContext";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -18,24 +19,6 @@ const jetbrainsMono = JetBrains_Mono({
   display: "swap",
 });
 
-export const metadata: Metadata = {
-  title: "Signal402",
-  description: "Professional trading signals dashboard",
-  icons: {
-    icon: [
-      { url: "/favicon/favicon-16x16.png", sizes: "16x16", type: "image/png" },
-      { url: "/favicon/favicon-32x32.png", sizes: "32x32", type: "image/png" },
-      { url: "/favicon/favicon.ico" },
-    ],
-    apple: "/favicon/apple-touch-icon.png",
-    other: [
-      { rel: "android-chrome-192x192", url: "/favicon/android-chrome-192x192.png" },
-      { rel: "android-chrome-512x512", url: "/favicon/android-chrome-512x512.png" },
-    ],
-  },
-  manifest: "/favicon/site.webmanifest",
-};
-
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -46,11 +29,13 @@ export default function RootLayout({
       <body
         className={`${inter.variable} ${jetbrainsMono.variable} font-sans antialiased`}
       >
-        <GlobalProvider>
-          <WalletContextProvider>
-            <SolanaWalletProvider>{children}</SolanaWalletProvider>
-          </WalletContextProvider>
-        </GlobalProvider>
+        <MixpanelProvider>
+          <GlobalProvider>
+            <WalletContextProvider>
+              <SolanaWalletProvider>{children}</SolanaWalletProvider>
+            </WalletContextProvider>
+          </GlobalProvider>
+        </MixpanelProvider>
       </body>
     </html>
   );

@@ -158,7 +158,7 @@ export default function PaymentModal({
         lastValidBlockHeight,
       });
 
-      await waitForFinalization(signature, 20000, 1200);
+      await waitForFinalization(signature, 15000, 1000);
 
       // setTxSignature(signature);
       dispatch({ type: "SET_TX_SIGNATURE", payload: signature });
@@ -184,7 +184,7 @@ export default function PaymentModal({
   // Wait for transaction finalization (adapted from index.ts)
   const waitForFinalization = async (
     signature: string,
-    timeoutMs: number = 20000,
+    timeoutMs: number = 15000,
     intervalMs: number = 1000
   ) => {
     const start = Date.now();
