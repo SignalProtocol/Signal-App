@@ -16,6 +16,7 @@ import axios from "axios";
 import ModalClose from "./ModalCloseButton.tsx/ModalClose";
 import { WalletMultiButton } from "@solana/wallet-adapter-react-ui";
 import { GlobalContext } from "../context/GlobalContext";
+import { useMixpanel } from "../context/MixpanelContext";
 
 const MEMO_PROGRAM_ID = new PublicKey(
   "MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr"
@@ -25,24 +26,25 @@ interface PaymentModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSuccess: (message: string) => void;
-  cardIndex: number;
+  cardToken?: string;
 }
 
 export default function PaymentModal({
   isOpen,
   onClose,
   onSuccess,
-  cardIndex,
+  cardToken,
 }: PaymentModalProps) {
   const { state, dispatch } = useContext(GlobalContext);
   const { cardUUID, txSignature, tokenBalance, unLockedCards } = state;
   const { connection } = useConnection();
   const { publicKey, signTransaction, connected } = useWallet();
+  const { trackEvent } = useMixpanel();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string>("");
+  const [isConfirming, setIsConfirming] = useState(false);
   const [initialPaymentResponse, setInitiatePaymentResponse] =
     useState<any>(null);
-  const [isConfirming, setIsConfirming] = useState(false);
 
   // Method inspired by index.ts sendPaymentWithSeed - adapted for browser wallet
   const handlePayAndGetMessage = async () => {
@@ -50,6 +52,17 @@ export default function PaymentModal({
       setError("Please connect your wallet first");
       return;
     }
+
+    // Track payment button click with Mixpanel
+    trackEvent("Payment Button Clicked", {
+      wallet_address: publicKey.toString(),
+      payment_amount: initialPaymentResponse?.payment_instruction?.amount_usdc,
+      payment_currency: "USDC",
+      token_name: cardToken || "Unknown",
+      card_uuid: cardUUID,
+      network: "devnet",
+      timestamp: new Date().toISOString(),
+    });
 
     setLoading(true);
 
@@ -158,7 +171,7 @@ export default function PaymentModal({
         lastValidBlockHeight,
       });
 
-      await waitForFinalization(signature, 15000, 1000);
+      await waitForFinalization(signature, 20000, 1200);
 
       // setTxSignature(signature);
       dispatch({ type: "SET_TX_SIGNATURE", payload: signature });
@@ -166,13 +179,28 @@ export default function PaymentModal({
       // Now make the final API call with the transaction signature
       await makeFinalPaymentAPICall(signature);
     } catch (err: any) {
-      setLoading(false);
-      setError(
+      const errorMessage =
         err.response?.data?.message ||
-          err.response?.data?.error ||
-          err.message ||
-          "Payment failed"
-      );
+        err.response?.data?.error ||
+        err.message ||
+        "Payment failed";
+
+      // Track payment failure with Mixpanel
+      trackEvent("Payment Failed", {
+        wallet_address: publicKey?.toString(),
+        payment_amount:
+          initialPaymentResponse?.payment_instruction?.amount_usdc,
+        payment_currency: "USDC",
+        token_name: cardToken || "Unknown",
+        card_uuid: cardUUID,
+        network: "devnet",
+        error_message: errorMessage,
+        error_stage: "transaction_processing",
+        timestamp: new Date().toISOString(),
+      });
+
+      setLoading(false);
+      setError(errorMessage);
     } finally {
       setError("");
       setLoading(false);
@@ -184,7 +212,7 @@ export default function PaymentModal({
   // Wait for transaction finalization (adapted from index.ts)
   const waitForFinalization = async (
     signature: string,
-    timeoutMs: number = 15000,
+    timeoutMs: number = 20000,
     intervalMs: number = 1000
   ) => {
     const start = Date.now();
@@ -255,6 +283,21 @@ export default function PaymentModal({
       // Format a message from the trading signal data
       const message = `${tradingSignal.action} ${tradingSignal.pair} at ${tradingSignal.leverage} leverage`;
 
+      // Track payment success with Mixpanel
+      trackEvent("Payment Success", {
+        wallet_address: publicKey?.toString(),
+        payment_amount:
+          initialPaymentResponse?.payment_instruction?.amount_usdc,
+        payment_currency: "USDC",
+        token_name: cardToken || "Unknown",
+        card_uuid: cardUUID,
+        network: "devnet",
+        trading_signal_pair: tradingSignal?.pair,
+        trading_signal_action: tradingSignal?.action,
+        timestamp: new Date().toISOString(),
+        txSignature: signature,
+      });
+
       // After successful transaction, clear error and set loading to false
       setError("");
       setLoading(false);
@@ -263,11 +306,25 @@ export default function PaymentModal({
       onSuccess(message);
     } catch (err: any) {
       console.error("❌ Error fetching trading signal:", err);
-      setError(
+      const errorMessage =
         err.response?.data?.error ||
-          err.message ||
-          "Failed to fetch trading signal"
-      );
+        err.message ||
+        "Failed to fetch trading signal";
+
+      // Track payment failure with Mixpanel
+      trackEvent("Payment Failed", {
+        wallet_address: publicKey?.toString(),
+        payment_amount:
+          initialPaymentResponse?.payment_instruction?.amount_usdc,
+        payment_currency: "USDC",
+        token_name: cardToken || "Unknown",
+        card_uuid: cardUUID,
+        network: "devnet",
+        error_message: errorMessage,
+        timestamp: new Date().toISOString(),
+      });
+
+      setError(errorMessage);
       setLoading(false);
     }
   };
@@ -405,7 +462,7 @@ export default function PaymentModal({
               }`}
             >
               {loading
-                ? "Processing Payment... Please wait..."
+                ? "Processing Payment..."
                 : !connected
                 ? "Connect Wallet First"
                 : `Pay ${initialPaymentResponse?.payment_instruction?.amount_usdc} USDC & Unlock Signal`}
