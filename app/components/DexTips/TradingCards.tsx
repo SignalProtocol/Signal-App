@@ -21,6 +21,7 @@ interface Card {
   positionSize: string;
   uuid: string;
   isUnlocked?: boolean;
+  logo_url?: string | null;
 }
 
 interface TradingCardsProps {
