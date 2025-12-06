@@ -17,6 +17,7 @@ import ModalClose from "./ModalCloseButton.tsx/ModalClose";
 import { WalletMultiButton } from "@solana/wallet-adapter-react-ui";
 import { GlobalContext } from "../context/GlobalContext";
 import { useMixpanel } from "../context/MixpanelContext";
+import PUBLIC_API_BASE_URL from ".."
 
 const MEMO_PROGRAM_ID = new PublicKey(
   "MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr"
@@ -40,6 +41,7 @@ export default function PaymentModal({
   const { connection } = useConnection();
   const { publicKey, signTransaction, connected } = useWallet();
   const { trackEvent } = useMixpanel();
+  const API_BASE_URL = PUBLIC_API_BASE_URL;
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string>("");
   const [isConfirming, setIsConfirming] = useState(false);
@@ -71,7 +73,7 @@ export default function PaymentModal({
       // const lamports = await connection.getBalance(publicKey);
 
       // Generate a unique reference for this payment (similar to invoice reference)
-      const reference = initialPaymentResponse?.reference;
+      const reference = initialPaymentResponse?.payment_instruction?.reference;
       const mintPk = new PublicKey(
         initialPaymentResponse?.payment_instruction?.usdc_mint
       );
@@ -239,7 +241,7 @@ export default function PaymentModal({
 
     try {
       await axios.get(
-        `https://signal-pipeline.up.railway.app/signal/${cardUUID}?network=devnet`
+        `${API_BASE_URL}/signal/${cardUUID}?network=devnet`
       );
     } catch (err: unknown) {
       if (axios.isAxiosError(err)) {
@@ -255,7 +257,7 @@ export default function PaymentModal({
   const makeFinalPaymentAPICall = async (signature: string) => {
     try {
       const response = await axios.get(
-        `https://signal-pipeline.up.railway.app/signal/${cardUUID}?network=devnet&reference=${initialPaymentResponse?.reference}&tx_sig=${signature}`
+        `${API_BASE_URL}/signal/${cardUUID}?network=devnet&reference=${initialPaymentResponse?.payment_instruction?.reference}&tx_sig=${signature}`
       );
 
       // The response data is the trading signal itself, not wrapped in trading_signal

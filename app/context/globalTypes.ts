@@ -6,6 +6,7 @@ export interface GlobalState {
   cardUUID?: string | null;
   unLockedCards?: any[];
   userProfileStatus?: number;
+  selectedDex?: string;
 }
 
 export type GlobalAction =
@@ -15,4 +16,5 @@ export type GlobalAction =
   | { type: "SET_TX_SIGNATURE"; payload: string | null }
   | { type: "SET_CARD_UUID"; payload: string | null }
   | { type: "SET_UNLOCKED_CARDS"; payload: any[] | null }
-  | { type: "SET_USER_PROFILE_STATUS"; payload: number };
+  | { type: "SET_USER_PROFILE_STATUS"; payload: number }
+  | { type: "SET_SELECTED_DEX"; payload: string | null };

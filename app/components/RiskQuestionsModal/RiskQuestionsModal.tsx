@@ -10,19 +10,13 @@ import { useMixpanel } from "../../context/MixpanelContext";
 interface RiskQuestionsModalProps {
   isOpen: boolean;
   onClose: () => void;
-  // riskScore: number | null;
-  // setRiskScore: React.Dispatch<React.SetStateAction<number | null>>;
   setShowRiskResultModal: React.Dispatch<React.SetStateAction<boolean>>;
-  // walletAddress: string | null;
 }
 
 const RiskQuestionsModal: React.FC<RiskQuestionsModalProps> = ({
   isOpen,
   onClose,
-  // riskScore,
-  // setRiskScore,
   setShowRiskResultModal,
-  // walletAddress,
 }) => {
   const { state, dispatch } = useContext(GlobalContext);
   const { riskScore } = state;
@@ -367,7 +361,7 @@ const RiskQuestionsModal: React.FC<RiskQuestionsModalProps> = ({
     };
     try {
       await axios.post(
-        "https://signal-pipeline.up.railway.app/setuserprofile",
+        `${API_BASE_URL}/setuserprofile`,
         payload
       );
     } catch (error) {

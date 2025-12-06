@@ -30,11 +30,10 @@ interface TradingCardsProps {
 
 const TradingCards: React.FC<TradingCardsProps> = ({ cards, onUnlock }) => {
   const { state } = useContext(GlobalContext);
-  const { unLockedCards } = state;
+  const { unLockedCards, selectedDex } = state;
   const { publicKey } = useWallet();
   const { trackEvent } = useMixpanel();
-  const dexLink =
-    localStorage.getItem("selectedDex") || "https://app.hyperliquid.xyz/trade";
+  const dexLink = selectedDex || "https://app.hyperliquid.xyz/trade";
   const [query, setQuery] = useState("");
   const [showDexLinksModal, setShowDexLinksModal] = useState(false);
   const [refreshTrigger, setRefreshTrigger] = useState(0); // Used to trigger re-renders when cards expire
@@ -218,7 +217,7 @@ const TradingCards: React.FC<TradingCardsProps> = ({ cards, onUnlock }) => {
       token_name: card?.token,
       card_uuid: card?.uuid,
     });
-  }
+  };
 
   // Periodically check for expired cards and trigger re-render
   useEffect(() => {
@@ -503,7 +502,7 @@ const TradingCards: React.FC<TradingCardsProps> = ({ cards, onUnlock }) => {
                     rel="noopener noreferrer"
                     className="flex items-center gap-1.5 px-4 py-2 rounded-full text-xs font-semibold transition-all duration-300 transform hover:scale-105 bg-gradient-to-r from-cyan-600 to-cyan-500 hover:from-cyan-500 hover:to-cyan-500 text-white shadow-[0_0_15px_rgba(0,255,255,0.3)] hover:shadow-[0_0_25px_rgba(0,255,255,0.5)] no-underline border-none"
                     onClick={() => {
-                      handleCheckDexTrack(card)
+                      handleCheckDexTrack(card);
                     }}
                   >
                     <svg

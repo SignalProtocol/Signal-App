@@ -1,10 +1,12 @@
 "use client";
 
-import React, { useState, useContext } from "react";
+import React, { useContext } from "react";
 import ModalClose from "../ModalCloseButton.tsx/ModalClose";
 import { useWallet } from "@solana/wallet-adapter-react";
-import { GlobalContext } from "../../context/GlobalContext";
 import { useMixpanel } from "../../context/MixpanelContext";
+import { GlobalContext } from "@/app/context/GlobalContext";
+import axios from "axios";
+import PUBLIC_API_BASE_URL from "@/app";
 
 interface DexLinksModalProps {
   isOpen: boolean;
@@ -64,27 +66,42 @@ const DEX_OPTIONS: DexOption[] = [
 ];
 
 const DexLinksModal: React.FC<DexLinksModalProps> = ({ isOpen, onClose }) => {
+  const { state, dispatch } = useContext(GlobalContext);
+  const { riskScore, selectedDex } = state;
   const { connected, publicKey } = useWallet();
   const { trackEvent } = useMixpanel();
-  const [selectedDex, setSelectedDex] = useState<string | null>(null);
+  const API_BASE_URL = PUBLIC_API_BASE_URL
 
   if (!isOpen) return null;
 
   if (!connected) return null;
 
   const handleDexSelect = (dex: DexOption) => {
-    setSelectedDex(dex.id);
-    localStorage.setItem("selectedDex", dex.url);
+    dispatch({type: "SET_SELECTED_DEX", payload: dex?.url});
     trackEvent("DEX Selected", {
-      dexId: dex.id,
-      dexName: dex.name,
-      dexUrl: dex.url,
+      dexId: dex?.id,
+      dexName: dex?.name,
+      dexUrl: dex?.url,
       walletAddress: publicKey?.toBase58(),
       timestamp: new Date().toISOString(),
     });
   };
 
-  const handleConfirm = () => {
+  const handleConfirm = async () => {
+    const payload = {
+      wallet_address: publicKey?.toBase58(),
+      risk_score: riskScore,
+      preferred_dex: selectedDex,
+    };
+
+    try {
+      await axios.post(
+        `${API_BASE_URL}/setuserprofile`,
+        payload
+      );
+    } catch (error) {
+      console.error("Error sending user profile:", error);
+    }
     onClose();
   };
 
@@ -99,10 +116,10 @@ const DexLinksModal: React.FC<DexLinksModalProps> = ({ isOpen, onClose }) => {
         <div className="grid grid-cols-2 gap-3">
           {DEX_OPTIONS.map((dex) => (
             <button
-              key={dex.id}
+              key={dex?.id}
               onClick={() => handleDexSelect(dex)}
               className={`flex items-center gap-2.5 p-3 rounded-2xl border-2 cursor-pointer transition-all duration-200 ${
-                selectedDex === dex.id
+                selectedDex === dex?.id
                   ? "border-cyan-500 bg-cyan-500/10"
                   : "border-gray-700/50 bg-gray-800/30 hover:border-cyan-500/50 hover:bg-gray-800/50"
               }`}
@@ -121,17 +138,17 @@ const DexLinksModal: React.FC<DexLinksModalProps> = ({ isOpen, onClose }) => {
               </div>
               <div className="flex-1 min-w-0">
                 <h3 className="text-sm font-semibold text-white truncate">
-                  {dex.name}
+                  {dex?.name}
                 </h3>
               </div>
               <div
                 className={`w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${
-                  selectedDex === dex.id
+                  selectedDex === dex?.url
                     ? "border-cyan-500 bg-cyan-500"
                     : "border-gray-500"
                 }`}
               >
-                {selectedDex === dex.id && (
+                {selectedDex === dex?.url && (
                   <div className="w-2.5 h-2.5 rounded-full bg-white"></div>
                 )}
               </div>
@@ -149,7 +166,7 @@ const DexLinksModal: React.FC<DexLinksModalProps> = ({ isOpen, onClose }) => {
           <button
             onClick={handleConfirm}
             disabled={!selectedDex}
-            className={`px-6 py-2 rounded-full font-semibold transition-all ${
+            className={`px-6 py-2 rounded-full font-semibold transition-all cursor-pointer ${
               selectedDex
                 ? "bg-gradient-to-r from-cyan-500 to-cyan-400 text-white hover:shadow-lg hover:shadow-cyan-500/50"
                 : "bg-gray-700 text-gray-500 cursor-not-allowed"

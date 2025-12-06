@@ -1,0 +1,3 @@
+const PUBLIC_API_BASE_URL = process.env.NEXT_PUBLIC_ENVIRONMENT === "staging" ? process.env.NEXT_PUBLIC_STAGING_API_URL : process.env.NEXT_PUBLIC_PRODUCTION_API_URL
+
+export default PUBLIC_API_BASE_URL;

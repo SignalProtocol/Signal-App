@@ -8,6 +8,7 @@ export const initialState: GlobalState = {
   cardUUID: null,
   unLockedCards: [],
   userProfileStatus: 0,
+  selectedDex: "https://app.hyperliquid.xyz/trade",
 };
 
 export function globalReducer(
@@ -29,6 +30,8 @@ export function globalReducer(
       return { ...state, unLockedCards: action.payload || [] };
     case "SET_USER_PROFILE_STATUS":
       return { ...state, userProfileStatus: action.payload };
+    case "SET_SELECTED_DEX":
+      return { ...state, selectedDex: action.payload };
     default:
       return state;
   }
