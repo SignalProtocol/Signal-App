@@ -266,11 +266,11 @@ const HallOfFame = () => {
                         : "text-gray-300"
                     }`}
                   >
-                    {signal?.performance?.realized_pnl_pct
+                    {signal?.performance?.realized_pnl_pct != null
                       ? `${
                           signal?.performance?.realized_pnl_pct > 0 ? "+" : ""
                         }${signal?.performance?.realized_pnl_pct}%`
-                      : "---"}
+                      : "0.00%"}
                   </p>
                 </div>
                 <div className="bg-[#1a1a1f]/50 p-2.5 rounded-lg border border-[#2a2a33]">
@@ -278,7 +278,8 @@ const HallOfFame = () => {
                     Max Profit
                   </p>
                   <p className="text-lg font-mono font-bold text-green-400">
-                    +{signal?.performance?.max_profit_pct?.toFixed(2)}%
+                    +{signal?.performance?.max_profit_pct?.toFixed(2) || "0.00"}
+                    %
                   </p>
                 </div>
               </div>
