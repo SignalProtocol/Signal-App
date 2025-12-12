@@ -9,6 +9,7 @@ export const initialState: GlobalState = {
   unLockedCards: [],
   userProfileStatus: 0,
   selectedDex: "https://app.hyperliquid.xyz/trade",
+  signalHistory: [],
 };
 
 export function globalReducer(
@@ -32,6 +33,8 @@ export function globalReducer(
       return { ...state, userProfileStatus: action.payload };
     case "SET_SELECTED_DEX":
       return { ...state, selectedDex: action.payload };
+    case "SET_SIGNAL_HISTORY":
+      return { ...state, signalHistory: action.payload };
     default:
       return state;
   }

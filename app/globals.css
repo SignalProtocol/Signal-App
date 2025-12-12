@@ -32,12 +32,11 @@ body {
 /* Wallet adapter button styling */
 .wallet-adapter-button {
   font-size: 14px !important;
-  /* background: linear-gradient(to right, #2BC6FF, #00FFFF) !important;
-  background-color: #00e5e5 !important; */
   border: 2px solid #2BC6FF !important;
   color: #2BC6FF !important;
   background: transparent !important;
   border-radius: 9999px !important;
+  justify-content: center !important;
 }
 
 .wallet-adapter-button:not([disabled]):hover {
@@ -47,6 +46,13 @@ body {
 .wallet-adapter-button[disabled] {
   background: #4a5568 !important;
   opacity: 0.6 !important;
+}
+
+@media (max-width: 768px) {
+  .wallet-adapter-dropdown {
+    font-size: 12px !important;
+    width: 100%;
+  }
 }
 
 @media (min-width: 768px) {
