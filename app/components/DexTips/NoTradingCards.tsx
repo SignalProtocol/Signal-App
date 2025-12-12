@@ -19,7 +19,7 @@ const NoTradingCards = () => {
           >
             <div className="filter grayscale opacity-20 blur-[10px] pointer-events-none select-none">
               {/* Card Header with Token Badge */}
-              <div className="flex items-start justify-between mb-3 pb-2 border-b border-[#2a2a33]">
+              <div className="flex items-start justify-between mb-3 pb-2 border-b border-[#2a2a33] gap-2">
                 <div className="flex items-center gap-2">
                   <div className="w-8 h-8 rounded-full bg-gradient-to-br from-cyan-500/20 to-cyan-400/20 border border-cyan-500/30 flex items-center justify-center">
                     <span className="text-cyan-400 font-bold text-[10px]">
@@ -78,7 +78,7 @@ const NoTradingCards = () => {
                   </div>
                 )}
                 <div>
-                  <p className="text-[12px] text-yellow-300 drop-shadow-[0_0_8px_rgba(34,197,94,0.6)] uppercase tracking-wide">
+                  <p className="text-[12px] text-yellow-300 drop-shadow-[0_0_8px_rgba(34,197,94,0.6)] uppercase tracking-wide text-end">
                     POSITION SIZE: 5%
                   </p>
                 </div>

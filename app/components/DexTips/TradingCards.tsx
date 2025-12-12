@@ -82,7 +82,7 @@ const TradingCards: React.FC<TradingCardsProps> = ({ cards, onUnlock }) => {
           unblockedCards = JSON.parse(storedUnblockedCards);
         } catch (error) {
           console.error(
-            "❌ Error parsing unblockedCards from localStorage:",
+            "Error parsing unblockedCards from localStorage:",
             error
           );
           unblockedCards = [];
@@ -162,6 +162,7 @@ const TradingCards: React.FC<TradingCardsProps> = ({ cards, onUnlock }) => {
           positionSize: unblockedSignal.position_size_pct || card.positionSize,
           isUnlocked: true,
           time: unblockedSignal.time,
+          logo_url: unblockedSignal.logo_url || card.logo_url,
         };
       }
 
@@ -323,7 +324,7 @@ const TradingCards: React.FC<TradingCardsProps> = ({ cards, onUnlock }) => {
                 }`}
               >
                 {/* Card Header with Token Badge */}
-                <div className="flex items-start justify-between mb-3 pb-2 border-b border-[#2a2a33]">
+                <div className="flex items-start justify-between mb-3 pb-2 border-b border-[#2a2a33] gap-2">
                   <div className="flex items-center gap-2">
                     <div className="w-8 h-8 rounded-full bg-gradient-to-br from-cyan-500/20 to-cyan-400/20 border border-cyan-500/30 flex items-center justify-center">
                       {card?.logo_url ? (
@@ -393,7 +394,7 @@ const TradingCards: React.FC<TradingCardsProps> = ({ cards, onUnlock }) => {
                     {/* <h1 className="font-bold text-base text-white text-right">
                       {card.instrument.toUpperCase()}
                     </h1> */}
-                    <p className="text-[12px] text-yellow-300 drop-shadow-[0_0_8px_rgba(34,197,94,0.6)] uppercase tracking-wide">
+                    <p className="text-[12px] text-yellow-300 drop-shadow-[0_0_8px_rgba(34,197,94,0.6)] uppercase tracking-wide text-end">
                       POSITION SIZE: {card.positionSize}%
                     </p>
                   </div>
