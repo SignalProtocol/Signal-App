@@ -12,7 +12,7 @@ const HallOfFame = () => {
   const getHistorySignalData = async () => {
     try {
       const response = await axios.get(
-        `${API_BASE_URL}/signals?force_refresh=true&min_age_hours=0&limit=10`
+        `${API_BASE_URL}/signals?force_refresh=true&min_age_hours=24&limit=10`
       );
       const signalsHistory = response?.data;
       dispatch({
